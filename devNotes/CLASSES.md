@@ -45,7 +45,11 @@ Deux outils ont été ajoutés pour cette passe. **Ils seront supprimés à la f
   - [x] **Élémentaliste** : l'échelle des combos tient (valeur/PA médiane 2,50 sans prérequis → 2,11 à un élément → 3,76 à deux éléments → 9,10 à trois exemplaires du même). Ses 16 cartes « dominées » se réduisent à deux écarts : *Cœur Du Volcan* (N11, 2,58/PA, et il paie 5 PV en plus) et *Nuée Incandescente* (N10, 2,70), tous deux sous les N5‑N6 du même palier (4,17 et 4,35) — le ventre mou est au milieu de la montée, le N12 remonte à 5,4. *Nécrose Blanche* est résolue : avec `virus` chiffré, elle passe de 1,47 à **5,74/PA**, en haut de son palier. Deux cartes restent à mesurer autrement : *Brasier Tournant* (N10, `auto`, coût ET valeur récurrents) et *Mur De Givre* (N2, sans prérequis à 5,12/PA, dont le mur infranchissable est valué 0).
   - [x] **Gardien** : progression saine, avec un creux au milieu. Valeur/PA-équivalent médiane par palier : **1,66 (N1‑3) → 0,91 (N4‑6) → 1,76 (N7‑9) → 3,07 (N10‑12)**. Le creux de N4 à N6 reste le plus marqué du jeu. *(Chiffres révisés après la règle 9 : le relevé précédent, 1,17/0,87/1,10/1,68, ne comptait pas ses 18 générateurs de zèle et concluait à tort que ses cartes de début étaient ses meilleures.)* Trois cartes tirent tout le reste vers le bas : *Onde De Choc* (N5, 2,58, bouclier requis et cibles adjacentes), *Hémorragie* (N1, 1,57) et *Renfort D‘Armure* (N1, 1,33). Les moins rentables : *Affutage* (N3, **0,25** — 4 PA pour un avantage sur un seul jet), *Changement De Posture* (N4, 0,34 et 0,70), *Soif De Sang* (N10, 0,37) et *Égide* (N9, 0,57).
     - À mesurer autrement avant d'y toucher : *Sacrifice du Gardien* (N11, 0,54 mesuré) transfère **la moitié des PV courants** en PV temporaires à un allié, soit 82 PV au N12, qui n'apparaît dans aucun champ ; *Soif De Sang* n'est jouable qu'à 20 % de vie ou moins et donne +5 dégâts jusqu'à la fin du combat ; *Chair De Titan* (N8, 0,65) baisse tous les dégâts du modificateur de Force en contrepartie de ses PV temporaires.
-    - À confirmer : les deux postures de *Changement De Posture*. Le mode 1 (« Defensive Stance ») s'applique au lanceur avec `critical +@str` et `evasion -@str` ; le mode 2 (« Offensive Stance ») porte `self: false` avec `critical -@con` et `evasion +@con`. La description dit que le joueur transfère son propre critique et sa propre esquive.
+    - **À trancher : *Changement De Posture* (N4).** Sa description dit « Transférez jusqu'à X points d'esquive en critique **ou** jusqu'à Y points de critique en esquive », X étant la Force et Y la Constitution. Les données portent trois écarts avec ce texte :
+      1. le mode 1 s'appelle « Posture défensive » mais fait `critical +@str` / `evasion −@str`, c'est-à-dire l'échange offensif ; le mode 2 s'appelle « Posture offensive » et fait `critical −@con` / `evasion +@con`, l'échange défensif ;
+      2. le mode 2 porte `self: false`, donc applique le transfert **à la cible** et non au Gardien ;
+      3. le texte dit « jusqu'à », donc un choix, mais `xvalue` et `yvalue` sont vides : les données appliquent @str ou @con en entier.
+      Ces deux modes sont **deux des trois plus bas de tout le palier N4‑N6** (0,34 et 0,70). Tant que la carte n'est pas tranchée, le creux du Gardien ne se rééquilibre pas : il ne reste que *Chaîne De Fer* (0,60), dont la valeur est entièrement positionnelle — elle tire un ennemi de 6 cases jusqu'au contact et l'agrippe, ce que la grille vaut 0. **Les cinq autres modes du palier sont à 1,36 ou plus** : il n'y a pas de problème de réglage à cet endroit.
   - [x] **Moine** : progression correcte jusqu'au N9, puis décrochage au dernier palier. Valeur/PA-équivalent médiane après correction de *Gant De Fer* : **1,47 (N1‑3) → 1,65 (N4‑6) → 1,87 (N7‑9) → 1,23 (N10‑12)** — le N10‑12 était à 0,49 avant, soit un quart de son N7‑9. Le constat résiste au test de sensibilité sur X. *(Chiffres révisés après la règle 9 : le relevé précédent, 0,62/0,78/0,57/0,33, ne comptait pas ses 20 générateurs de zèle — les plus nombreux du jeu — et donnait une classe plate ; c'est bien le seul N10‑12 qui décroche.)*
     - À lire avec précaution : **55 % de ses modes dépendent d'un `XXX`**, deux fois la classe suivante. C'est sa signature (le rendement monte avec le tempo du tour) et c'est exactement ce que la convention X = 2 écrase. Les cinq cartes concernées sont des convertisseurs : *Paume de l'Aube* (N12, dépense X PA et rend X PV, sans plafond), *Bague de soins* (N10, soigne les PA déjà dépensés), *Sérénité Pleine* (N3, soin et esquive selon les cartes en main), *Méditation Zen* (N7) et *Transfert De Soins* (N8, transfère X de ses PV à un allié — somme nulle pour lui, positive pour le groupe).
     - Sa rejouabilité conditionnelle n'est pas dans la mesure par PA : *Coup Droit* (N1, ×6), *Coup Gauche* (N2, ×4) et *Crochet* (N8, ×3) portent `replayable: XXX` et valent deux usages pour une place en main quand le joueur a déjà dépensé 4 PA dans le tour. La main étant la ressource qui contraint, c'est là que la classe se paie : **valeur par place en main** de 6,0 à 9,0 contre 3,0 pour une carte moyenne de la classe (le quartile bas le plus faible du jeu, à égalité avec l'Illusionniste), compensé par la meilleure pioche du jeu (2,2 par tour).
@@ -85,7 +89,7 @@ Deux outils ont été ajoutés pour cette passe. **Ils seront supprimés à la f
     - **Le jeu donne lui-même son taux de change** : cinq cartes offrent « N points de zèle OU M points de sacrifice » — 3/2 (*Écho Sépulcral* N1), 4/3 (*Rappel D’Outre-Tombe* N4, *Pacte D’Ossements* N6), 6/4 (*Exhumation* N10). Soit **1 point de sacrifice = 1,33 à 1,5 zèle = 6,3 à 7,0 PA-équivalent**, cohérent sur les quatre cartes.
   - [x] **Guerrier Runique**, mesuré dans son unité : le deck-building en combat fonctionne, et sa montée en puissance est la plus forte du jeu. *Rune du carnage* (N12, `4d10 + 3*@str + 3*@bonus.redRune`) va de **37 dégâts à vide à 97 avec 20 runes rouges** ; *Rune du rempart* (N12) de 20,5 à 80,5 en soins. C'est bien un late-game carry.
     - Deux branches sur trois sont complètes et **rigoureusement symétriques** : `redRune` et `blueRune` sont chacun alimentés par 32 effets et lus par **quatre** cartes aux mêmes niveaux (N4, N9, N10, N12) — *Saignée Runique*, *Rune d'hécatombe*, *Rune de perfection*, *Rune du carnage* pour le rouge ; *Communion Runique*, *Rune de l'éternité*, *Rune de l'insaisissable*, *Rune du rempart* pour le bleu.
-    - **La branche jaune n'a pas de paiement.** `yellowRune` est alimenté par 32 effets, exactement comme les deux autres, et **aucune carte ne le lit** — ni dans une formule de dégâts ou de soins, ni dans la valeur d'un effet. Le deck de base pousse pourtant à drafter du jaune autant que du reste : quatre *Frappe runique jaune* (N1, N5, N8, N11), contre quatre rouges (N1, N3, N6, N9) et quatre bleues (N1, N4, N7, N10).
+    - **La branche jaune ne payait qu'au N4** — corrigé, voir « Corrections appliquées ». `yellowRune` est alimenté par 32 effets comme les deux autres, et le deck de base pousse à en tirer autant : quatre *Frappe runique jaune* (N1, N5, N8, N11) contre quatre rouges (N1, N3, N6, N9) et quatre bleues (N1, N4, N7, N10). Mais là où le rouge et le bleu ont chacun quatre lecteurs (N4, N9, N10, N12), le jaune n'en avait qu'un, *Décharge Runique* (N4) — et encore, dans son **coût** (`-max(5, 35-@bonus.yellowRune)`) et non dans sa valeur. Ses trois cartes de fin de campagne étaient **plates**.
     - *Marche du Nord* (N2) est la seule carte du jeu à **rendre** des points d'action : +5 PA et dissipe un niveau de fatigue, et elle nécessite d'avoir au moins un niveau de fatigue — donc d'avoir déjà vidé son deck une fois (cf. `CombatTurn.applyDeckFatigue`).
     - Vérifié au passage : ses `chooseCardsList` nomment `fq-card-engine.decks-pattern-fq8` alors que les decks de runes vivent dans l'extension. Ce n'est pas une erreur — `PackUtils.packsNamed` résout les paquets **par nom à travers tous les modules**, le préfixe est décoratif.
 
@@ -120,6 +124,32 @@ Effet sur les paliers : le N10‑12 du **Moine** passe de 0,49 à **1,23**, celu
 - *Invisible pour la grille, le paiement est dans la prose* : *Cape Inhibitrice* (N11 ×3, retire un effet néfaste pour 2 PA), *Souffle Perpétuel* (N10, **+1 zèle au début de chacun de vos tours sans plus rien payer** — un moteur permanent que la mesure vaut 0), *Fantôme Majeur* (Mage Blanc N12, lève un fantôme à +1..5 dégâts contre autant de malus).
 
 Enfin, *Dissimulation* (N11, 2,55) et *Poing Rouge* (N12, 3,13) chez le Moine étaient déjà au-dessus de la cible : rien à y faire.
+
+---
+
+### Corrections appliquées — branche jaune du Guerrier Runique (2026‑10‑04)
+
+Le rouge et le bleu portent tous deux `2*compteur` au N9, `2 + compteur` au N10 et `3*compteur` au N12. Les trois cartes jaunes des mêmes niveaux alimentaient `yellowRune` **sans jamais le lire** : elles ne récompensaient pas l'accumulation, alors que c'est tout le design de la classe. Elles le lisent maintenant, dans l'unité de la couleur — les points d'action.
+
+La contrainte était double : brancher le compteur **et** redescendre, parce que ces cartes étaient déjà trop fortes. *Rune du zénith* sortait à **3,55** de valeur par PA-équivalent avant toute retouche, quand *Rune du carnage* (rouge, N12) est à 2,57.
+
+| Carte | N | avant | après |
+|---|---|---|---|
+| *Rune de surcharge* | 9 | `action: "XXX"` | `action: "XXX + 2*@bonus.yellowRune"` |
+| *Rune d'accélération* | 10 | `action.max: "6"` | `action.max: "3 + ceil(@bonus.yellowRune/4)"` |
+| *Rune du zénith* | 12 | `action: "10"`, `action.max: "10"`, zèle −3 | `action: "5"`, `action.max: "6 + ceil(@bonus.yellowRune/3)"`, zèle −5 |
+
+**Un point tous les 3 ou 4 compteurs, là où le rouge en met 3 par compteur** : un bonus d'`action.max` persiste 3 tours, donc un point y vaut trois points d'action réels, soit 3,75 dégâts équivalents. Le ratio final, comparé au rouge du même niveau :
+
+| Carte | N | 0 rune | 5 | 10 | 20 | rouge au même N |
+|---|---|---|---|---|---|---|
+| *Rune de surcharge* | 9 | 0,50 | 1,00 | 1,50 | 2,50 | 1,75 |
+| *Rune d'accélération* | 10 | 0,80 | 1,33 | 1,60 | 2,13 | 1,40 |
+| *Rune du zénith* | 12 | 1,22 | 1,54 | 1,86 | 2,34 | 2,57 |
+
+*Rune de surcharge* garde son coefficient plein parce qu'elle est la seule des trois à payer une contrepartie : son effet `Overload` met `action.max` à **0 pendant un tour**, soit un tour entier sans agir — 20,3 PA au N12, qui entrent dans son coût ci-dessus. Les deux autres n'ont aucun contrepoids, d'où les coefficients fractionnaires.
+
+Les descriptions FR et EN suivent. Aucune carte créée, aucune clé de traduction ajoutée : trois cartes, cinq valeurs, six descriptions.
 
 ---
 

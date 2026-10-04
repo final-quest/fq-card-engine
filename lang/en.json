@@ -884,7 +884,7 @@
   "FQCARDTITLE.SupersonicShot": "Supersonic Shot",
   "FQCARDDESCRIPTION.SupersonicShot": "Move the target by a number of spaces equal to twice your Wisdom, minus X, in the desired direction.\nDeals {0_damage} damage, where X is the distance to the target.\n(non-critical, unavoidable,\nXmin = {0_xmin})",
   "FQCARDTITLE.PoisonedShot": "Poisoned Shot",
-  "FQCARDDESCRIPTION.PoisonedShot": "Deals {0_damage} damage and poisons the target: 1 damage per turn, and the poison spreads every turn (stackable up to 2 times). Poisoned, it attacks with disadvantage for 2 turns.",
+  "FQCARDDESCRIPTION.PoisonedShot": "Deals {0_damage} damage and poisons the target: 1 damage per turn, and the poison spreads every turn (stackable up to 2 times). Poisoned, it attacks with disadvantage for 2 turns. The range of this spell is raised by @dex",
   "FQCARDTITLE.Trap": "Trap",
   "FQCARDDESCRIPTION.Trap": "Restrains the target for their next turn, leaving it unable to move, and deals {0_damage} damage.",
   "FQCARDTITLE.ReflexShot": "Reflex Shot",
