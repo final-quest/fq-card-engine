@@ -40,8 +40,36 @@ Deux outils ont été ajoutés pour cette passe. **Ils seront supprimés à la f
 - ratio **générateurs / consommateurs de zèle**
 - ration consommation de resource VS dégâts ou heal entre les classes
 - Equilibrage nombres d'exemplaire de cartes (entre les classes)
-- Transformer la grille provisoire en **grille de coûts** définitive : dégâts ou soins attendus pour X PA / 1 mana / 1 zèle, par tranche de niveau (N1, N6, N12), à partir du rapport recalculé.
-- Plus un sort est haut en niveau plus il doit avoir un ratio cout/efficacité élevé (légèrement, il faut que les sorts de faible niveau reste interessant)
+- [x] Transformer la grille provisoire en **grille de coûts** définitive → voir « Grille de valorisation des cartes ». 1 PA = 1,25 dégât, 1 mana ≈ 2,9 PA, 1 zèle ≈ 4,7 PA ; les effets y sont chiffrés, statut par statut.
+- [ ] Plus un sort est haut en niveau plus il doit avoir un ratio cout/efficacité élevé (légèrement, il faut que les sorts de faible niveau reste interessant). La grille relève **73 cartes « dominées » par une carte de niveau inférieur** (Sorcière et Guerrier Runique exclus) : Élémentaliste 16, Gardien 14, Illusionniste 12, Moine 11, Maître d'Armes 11, Mage Blanc 5, Trapper 4. **Ce compte n'est pas une liste de fautes** : il ignore le prix d'entrée des cartes combo, qui est la première explication. À relire classe par classe en classant d'abord les cartes par profondeur de prérequis.
+  - [x] **Élémentaliste** : l'échelle des combos tient (valeur/PA médiane 2,50 sans prérequis → 2,11 à un élément → 3,76 à deux éléments → 9,10 à trois exemplaires du même). Ses 16 cartes « dominées » se réduisent à deux écarts : *Cœur Du Volcan* (N11, 2,58/PA, et il paie 5 PV en plus) et *Nuée Incandescente* (N10, 2,70), tous deux sous les N5‑N6 du même palier (4,17 et 4,35) — le ventre mou est au milieu de la montée, le N12 remonte à 5,4. *Nécrose Blanche* est résolue : avec `virus` chiffré, elle passe de 1,47 à **5,74/PA**, en haut de son palier. Deux cartes restent à mesurer autrement : *Brasier Tournant* (N10, `auto`, coût ET valeur récurrents) et *Mur De Givre* (N2, sans prérequis à 5,12/PA, dont le mur infranchissable est valué 0).
+  - [x] **Gardien** : progression saine, avec un creux au milieu. Valeur/PA-équivalent médiane par palier : **1,66 (N1‑3) → 0,91 (N4‑6) → 1,76 (N7‑9) → 3,07 (N10‑12)**. Le creux de N4 à N6 reste le plus marqué du jeu. *(Chiffres révisés après la règle 9 : le relevé précédent, 1,17/0,87/1,10/1,68, ne comptait pas ses 18 générateurs de zèle et concluait à tort que ses cartes de début étaient ses meilleures.)* Trois cartes tirent tout le reste vers le bas : *Onde De Choc* (N5, 2,58, bouclier requis et cibles adjacentes), *Hémorragie* (N1, 1,57) et *Renfort D‘Armure* (N1, 1,33). Les moins rentables : *Affutage* (N3, **0,25** — 4 PA pour un avantage sur un seul jet), *Changement De Posture* (N4, 0,34 et 0,70), *Soif De Sang* (N10, 0,37) et *Égide* (N9, 0,57).
+    - À mesurer autrement avant d'y toucher : *Sacrifice du Gardien* (N11, 0,54 mesuré) transfère **la moitié des PV courants** en PV temporaires à un allié, soit 82 PV au N12, qui n'apparaît dans aucun champ ; *Soif De Sang* n'est jouable qu'à 20 % de vie ou moins et donne +5 dégâts jusqu'à la fin du combat ; *Chair De Titan* (N8, 0,65) baisse tous les dégâts du modificateur de Force en contrepartie de ses PV temporaires.
+    - À confirmer : les deux postures de *Changement De Posture*. Le mode 1 (« Defensive Stance ») s'applique au lanceur avec `critical +@str` et `evasion -@str` ; le mode 2 (« Offensive Stance ») porte `self: false` avec `critical -@con` et `evasion +@con`. La description dit que le joueur transfère son propre critique et sa propre esquive.
+  - [x] **Moine** : progression correcte jusqu'au N9, puis décrochage au dernier palier. Valeur/PA-équivalent médiane après correction de *Gant De Fer* : **1,47 (N1‑3) → 1,65 (N4‑6) → 1,87 (N7‑9) → 1,23 (N10‑12)** — le N10‑12 était à 0,49 avant, soit un quart de son N7‑9. Le constat résiste au test de sensibilité sur X. *(Chiffres révisés après la règle 9 : le relevé précédent, 0,62/0,78/0,57/0,33, ne comptait pas ses 20 générateurs de zèle — les plus nombreux du jeu — et donnait une classe plate ; c'est bien le seul N10‑12 qui décroche.)*
+    - À lire avec précaution : **55 % de ses modes dépendent d'un `XXX`**, deux fois la classe suivante. C'est sa signature (le rendement monte avec le tempo du tour) et c'est exactement ce que la convention X = 2 écrase. Les cinq cartes concernées sont des convertisseurs : *Paume de l'Aube* (N12, dépense X PA et rend X PV, sans plafond), *Bague de soins* (N10, soigne les PA déjà dépensés), *Sérénité Pleine* (N3, soin et esquive selon les cartes en main), *Méditation Zen* (N7) et *Transfert De Soins* (N8, transfère X de ses PV à un allié — somme nulle pour lui, positive pour le groupe).
+    - Sa rejouabilité conditionnelle n'est pas dans la mesure par PA : *Coup Droit* (N1, ×6), *Coup Gauche* (N2, ×4) et *Crochet* (N8, ×3) portent `replayable: XXX` et valent deux usages pour une place en main quand le joueur a déjà dépensé 4 PA dans le tour. La main étant la ressource qui contraint, c'est là que la classe se paie : **valeur par place en main** de 6,0 à 9,0 contre 3,0 pour une carte moyenne de la classe (le quartile bas le plus faible du jeu, à égalité avec l'Illusionniste), compensé par la meilleure pioche du jeu (2,2 par tour).
+    - Ses deux cartes les plus hautes sont ses moins rentables : *Paume de l'Aube* (N12, 0,09) et *Gant De Fer* (N12, 0,14, 22 PA-équivalent pour +1 dégât jusqu'à la fin du combat, ×3 exemplaires). Les dominantes sont *Sillage Curatif* (N9, 2,98) et *Déplacement Éclair* (N5, 2,14), deux cartes de déplacement traçant.
+  - [x] **Maître d'Armes** : rendement en cloche, **1,15 (N1‑3) → 2,54 (N4‑6) → 1,43 (N7‑9) → 1,16 (N10‑12)** en valeur par PA-équivalent. Le pic est au N4‑6 et la fin de campagne retombe au niveau du début.
+    - La cause est identifiée : **28 % de son deck de base (12 cartes) alimente le moteur de couteaux de lancer**, que la grille valorise à 0 parce que `cardBonus.knife` est une monnaie à part. Quatre cartes produisent les couteaux (*Ceinture de couteaux*, *Fourreau caché*, *Volée de couteaux*, et les quatre chaînes de *Forge*), cinq multiplient leurs dégâts (*Affûtage* +2 cumulable jusqu'à la fin du combat ×3, *Sang-froid* +6, *Lancer lesté* +4, *Momentum* +6/+4/+2, *Prise inversée* +8). Coût cumulé du moteur, exemplaires compris : **91 PA-équivalent**.
+    - Le couteau coûte **0 point d'action**, est `ephemere`, et son deck généré en porte **24 exemplaires**. À +25 de bonus accumulé, il inflige 30 dégâts pour zéro PA. C'est là que la classe se paie, et aucune mesure par PA ne peut le voir.
+    - Vérifié au passage : la grille pose `@wpnM`/`@wpnR` à 3,5 (dé d6) et c'est correct — `WeaponDamage.getEquippedWeaponDamageFormula` retire volontairement le modificateur de caractéristique des jetons d'arme. Les formules de `items-fq8` l'incluent (`@abilities.str.mod + 1d6`) mais il est retiré à la résolution.
+    - Deux dominantes : *Chakram* (N5, 4,29) et *Attaque Diagonale* (N6, 3,36). Leur valeur repose sur la convention de 3 cibles pour une zone, alors que les deux portent une contrainte géométrique réelle (« fend un rang entier », « sur les diagonales ») que la grille suppose toujours satisfaite.
+  - [x] **Mage Blanc** : monte jusqu'au N9 puis décroche, comme le Moine. Valeur/PA-équivalent médiane après correction d'*Effet Ange Et Démon* et de *Frappe de l'Éclipse* : **0,88 (N1‑3) → 1,09 (N4‑6) → 1,51 (N7‑9) → 0,98 (N10‑12)** — le N10‑12 était à 0,46 avant. Le constat tient au test de sensibilité : même en posant X = 6 marques, le N10‑12 (0,96) reste sous son N7‑9.
+    - Son dernier palier est le plus cher du jeu : **32 PA-équivalent de moyenne** pour 16,2 de valeur médiane. *Effet Ange Et Démon* (N12) demande à elle seule 16 PA + 4 mana + 4 zèle, soit **46,4 PA-équivalent** — la carte la plus chère mesurée, pour 18,0 de valeur (0,39).
+    - **35 % de ses modes n'ont aucun coût en PA** (16 sur 46), la part la plus haute du jeu : 9 réactives et 5 passives ou `auto`. Ses cinq cartes `auto` sont des auras qui **repaient leur coût à chaque tour** (1 mana) et se défaussent dès que le mana manque ; une mesure en un seul coup ne les voit pas. Quatre des dix modes de son palier N10‑12 sont de ce type (*Bouclier Vengeur*, *Bouclier Empathique*, *Aura de Hantise*, *Aura De Force*).
+    - L'économie des marques se tient : **53 entrées posent une marque** (`curse` 22, `haunt` 31) pour **6 modes qui lisent un compteur** (*Châtiments* N1, *Jugement dernier* N2, *Profanation* N5, *Sentence maudite* N10, *Frappe de l'Éclipse* N11, *Effet Ange Et Démon* N12). Toute la valeur de ces six cartes dépend du nombre de marques présentes, posé à 2 par convention.
+    - Les moins rentables : *Sentence maudite* (N10, 0,25), *Jugement dernier* (N2, 0,27), *Effet Ange Et Démon* (N12, 0,39), *Soin* (N2, 0,43) et *Frappe de l'Éclipse* (N11, 0,53, qui réduit en plus la constitution et la sagesse à 0 pendant 3 tours — un contrepoids que la grille ne chiffre pas).
+  - [x] **Illusionniste** : démarrage le plus faible du jeu puis plateau. Valeur/PA-équivalent médiane : **0,43 (N1‑3) → 1,96 (N4‑6) → 1,72 (N7‑9) → 1,34 (N10‑12)**. Son N1‑3 est le palier d'ouverture le plus bas des sept classes comparables, cohérent avec ses zéro point d'action de départ.
+    - Comme le Maître d'Armes, une monnaie propre : **35 % de son deck (18 modes) tient au compteur de portée**. Sept cartes l'accumulent (*Estoc perçant* ×5, *Allonge magique* ×4, *Fouet Enchanté* ×3, *Rapière Enchantée*, *Frappe Avec Salto Arrière* ×2, *Apothicaire* I et II), 120 PA-équivalent pour **+17 de portée au total** ; neuf la dépensent, 149 PA-équivalent. La grille pose la portée accumulée à 3, ce qui sous-estime tous les dépensiers.
+    - Sensibilité à la portée accumulée (3 / 7 / 12) : *Orbe Grandissante* (N12) va de **0,42 à 0,80 puis 1,28**, *Frappe Illusoire* (N5) de 0,79 à 2,07, *Volée de shuriken* (N10) de 2,68 à 4,62. Ces cartes ne se jugent pas à la convention, elles se jugent sur la portée que la classe atteint vraiment en partie.
+    - Une inversion qui résiste à toute hypothèse : *Volée de shuriken* (N10) reste **trois à quatre fois** plus rentable qu'*Orbe Grandissante* (N12) à tous les niveaux de portée testés, et *Passage vers le plan éthéré* (N9) plafonne à 0,62 même à portée 12, pour 19,3 PA-équivalent.
+    - À confirmer : *Apothicaire II* (N8) et *Apothicaire I* (N5) ont **le même coût** (3 PA, +1 zèle), les mêmes cinq modes et le même soin `@wis+1d4`. La seule différence lue dans les descriptions est une potion échangée sur cinq (force de la terre pour I, feu pour II).
+  - [x] **Trapper** : troisième classe à progresser jusqu'au bout. Valeur/PA-équivalent médiane : **1,10 (N1‑3) → 1,50 (N4‑6) → 1,47 (N7‑9) → 3,31 (N10‑12)**, et 4 cartes dominées seulement, le moins du jeu.
+    - **La spé bêtes est en retrait** : 11 modes à 1,50 de valeur par PA-équivalent contre **1,95 pour les tirs et pièges** (21 modes), soit 23 % de moins. Six de ses cartes scalent sur CHA, que le Trapper porte à 6 (−2) — ce qui confirme par la mesure l'écart déjà noté dans « Caracs utilisées par les cartes ».
+    - **Les pièges réactifs sont son vrai moteur** : six d'entre eux coûtent **0 point d'action** (joués hors tour), donc seulement du mana et du zèle. Même après avoir retiré les 31 % que leur coûte l'incritiquabilité (règle 10), *Piège à Fosse* (N5) sort à **7,02**, *Piège d'Affût* (N7) à 6,36 et *Piège en Chaîne* (N7) à 5,75 — trois à quatre fois la norme de la classe.
+    - *Mutation virale* (N10, 5 PA + 1 mana, soit 7,9 PA-éq) délivre 38,4 là où la norme donnerait 20,8 — **4,9/PA contre 2,6 attendus**. C'est le `virus` le moins cher du jeu, et son prix d'entrée (3 poisons) est posé de façon certaine par deux de ses propres cartes. À comparer à *Virulence* (Mage Blanc N8, 5 malédictions accumulées, 1,6/PA) et à *Nécrose Blanche* (Élémentaliste N11, 27,1 PA-éq).
+    - Les moins rentables : *Tir Supersonique* (N7, 0,34 — 9 PA pour 5,9 de valeur, et incritiquable), *Crocs Affûtés* (N11, 0,37), *Tir Enraciné* (N4, 0,41) et *Collet Mortel* (N11, 0,73).
 
 ## TODO détéctés
 - [ ] Nouvelles cartes : clés de localisation FR/EN, illustrations, sons et visuels. **En attente** : *Lien du Fauve*, *Rémission Illusoire*, *Écho de Convalescence*, *Estoc Perçant*, *Refrain Vivifiant*, *Crescendo*, *Trait d'Ombre-Verte Mineur*, *Tir de Maître*, *Leçon Partagée* et *Leçon de Jeu de Jambes* sont encore sur `in_progress.png`.
@@ -49,17 +77,51 @@ Deux outils ont été ajoutés pour cette passe. **Ils seront supprimés à la f
 - [ ] Reste ouvert : nettoyer l'`ItemChoice` vide de la Sorcière (`classes-fq8/witch.json`), puis retirer la ligne `pool vide :: witch.json` de `KNOWN_ISSUES`.
 - [ ] ▶️ **Fin de l'étape** : `npm run report:classes -- --check` ne doit plus signaler d'écart sur le nombre de cartes (les niveaux sont faits), puis `npm test`.
 - [ ] Incohérences déjà relevées :
+  - [x] **Sorcière**, mesurée dans son unité : son armée rend **0,19 dégât par PA-équivalent et par tour** (264 PA-éq pour 49 dégâts/tour, tous exemplaires confondus), contre 0,66 **une seule fois** pour une carte de dégâts directs — donc rentable à partir du 4ᵉ tour. Le design se tient ; l'écart interne, lui, est de **1 à 12**.
+    - *Croix De Squelettes* (N5, 4,0 PA-éq) rend **1,00** par PA-équivalent et par tour, là où *Nécromancie* (N7) rend 0,08, *Frappe Arcanique* (N6) 0,10 et *Main Sortie De Terre* (N1) 0,11.
+    - *Carré De Squelettes* (N8, 22,2 PA-éq) invoque **exactement les mêmes 4 squelettes de niveau 1** que *Croix* (4,0 PA-éq), soit 5,5 fois le prix. La différence est le placement : *Croix* les pose sur les cases adjacentes à la sorcière, *Carré* une zone de 2×2 à portée 3 à max(5, 5+@cha). La grille vaut le positionnement 0 : à trancher à la main.
+    - **Ses squelettes ne montent jamais** : au N12 elle invoque encore des `Skeleton lvl 1` à 1 dégât par tour (*Nécromancie* N7, *Croix* N5, *Carré* N8). La seule invocation qui scale est *Ostéologie* (N4), via le score de sacrifice plafonné à 4.
+    - L'économie du sacrifice est complète : **21 modes la dépensent** (la variable la plus utilisée du jeu) contre quatre cartes qui la produisent (*Trait D’Ombre-Verte Mineur* N1 une fois sur deux, *Sortilège D’Ombre* N3, *Trait D’Ombre-Verte* N6) et surtout le sacrifice d'un sbire au charnier (`TokenHud`). Elle est remise à 0 à chaque combat (`CombatTurn.#resetAttribute`).
+    - **Le jeu donne lui-même son taux de change** : cinq cartes offrent « N points de zèle OU M points de sacrifice » — 3/2 (*Écho Sépulcral* N1), 4/3 (*Rappel D’Outre-Tombe* N4, *Pacte D’Ossements* N6), 6/4 (*Exhumation* N10). Soit **1 point de sacrifice = 1,33 à 1,5 zèle = 6,3 à 7,0 PA-équivalent**, cohérent sur les quatre cartes.
+  - [x] **Guerrier Runique**, mesuré dans son unité : le deck-building en combat fonctionne, et sa montée en puissance est la plus forte du jeu. *Rune du carnage* (N12, `4d10 + 3*@str + 3*@bonus.redRune`) va de **37 dégâts à vide à 97 avec 20 runes rouges** ; *Rune du rempart* (N12) de 20,5 à 80,5 en soins. C'est bien un late-game carry.
+    - Deux branches sur trois sont complètes et **rigoureusement symétriques** : `redRune` et `blueRune` sont chacun alimentés par 32 effets et lus par **quatre** cartes aux mêmes niveaux (N4, N9, N10, N12) — *Saignée Runique*, *Rune d'hécatombe*, *Rune de perfection*, *Rune du carnage* pour le rouge ; *Communion Runique*, *Rune de l'éternité*, *Rune de l'insaisissable*, *Rune du rempart* pour le bleu.
+    - **La branche jaune n'a pas de paiement.** `yellowRune` est alimenté par 32 effets, exactement comme les deux autres, et **aucune carte ne le lit** — ni dans une formule de dégâts ou de soins, ni dans la valeur d'un effet. Le deck de base pousse pourtant à drafter du jaune autant que du reste : quatre *Frappe runique jaune* (N1, N5, N8, N11), contre quatre rouges (N1, N3, N6, N9) et quatre bleues (N1, N4, N7, N10).
+    - *Marche du Nord* (N2) est la seule carte du jeu à **rendre** des points d'action : +5 PA et dissipe un niveau de fatigue, et elle nécessite d'avoir au moins un niveau de fatigue — donc d'avoir déjà vidé son deck une fois (cf. `CombatTurn.applyDeckFatigue`).
+    - Vérifié au passage : ses `chooseCardsList` nomment `fq-card-engine.decks-pattern-fq8` alors que les decks de runes vivent dans l'extension. Ce n'est pas une erreur — `PackUtils.packsNamed` résout les paquets **par nom à travers tous les modules**, le préfixe est décoratif.
+
+
   - [ ] Moine : *Uppercut* annonce « piochez une carte » mais n'a pas de `draw`.
   - [ ] Gardien : *Frappe provocatrice*, le choix « -4 PV » coûte **aussi** 1 mana.
   - [ ] Mage Blanc : *Maudire* a `mana: 1` (gain au lieu d'un coût ?).
   - [ ] Mage Blanc : *Exorcisme* annonce « coûte @cha PA en moins » mais le coût est fixe (-7).
-  - [ ] Trapper : *Pluie de flèches* annonce « incritiquable » sans `bonusCrit` (à vérifier).
+  - [ ] **Vérifié** : *Pluie De Flèches* (Trapper N8) annonce bien « incritiquable » sans porter de `bonusCrit`. Le même contrôle étendu aux neuf decks donne trois autres cas : *Passage vers le plan éthéré* (Illusionniste N9), *Maudire* (Mage Blanc N1) et *Réprouver* (Mage Blanc N4). Et cinq cartes portent l'inverse — un `bonusCrit` très négatif que leur description ne mentionne pas : *Plastron magique* (Élémentaliste N7), *Bouclier magique* (Mage Blanc N2), *Le Bien Et Le Mal* (Mage Blanc N6) et *Jugement dernier* (Mage Blanc N2).
   - [ ] **Casse des images** : 30 cartes et le dos du deck Moine généré pointent vers un fichier dont la casse diffère (`.png` / `.PNG`, dossier `Illusionist` au lieu de `illusionist`). Invisible sous Windows, image cassée sur un serveur Linux. Liste complète dans `KNOWN_ISSUES` du test d'intégrité.
 - [ ] Caractéristiques dnd5e (tableau « Caracs utilisées par les cartes ») :
   - [ ] Illusionniste : 17 jets de toucher/sauvegarde sur **INT**, qui n'est ni primaire ni montée (INT 10).
   - [ ] Sorcière : les formules sont revenues à INT 9 / SAG 9, mais les **jets** restent sur SAG (4) plutôt que sur INT (3), alors que INT est primaire.
   - [ ] Trapper : la spé bêtes scale sur **CHA** (7 formules) alors que le Trapper démarre à CHA 6 (-2).
   - [ ] Mage Blanc : *Aura de Force* et *Exorcisme* scalent sur CHA, alors que le Mage Blanc a CHA 6 (-2).
+
+### Corrections appliquées — Moine et Mage Blanc (2026‑10‑04)
+
+Les deux classes qui décrochaient au dernier palier. Trois cartes corrigées, celles dont **le coût et la valeur sont tous deux dans les données** — sans dépendre d'une convention de la grille.
+
+| Carte | Classe | N | avant | après | ce qui a changé |
+|---|---|---|---|---|---|
+| *Gant De Fer* | Moine | 12 | 0,27 | **1,68** | 8 PA → 6, zèle −3 → −1, `bonus.damage` 1 → 3 |
+| *Effet Ange Et Démon* | Mage Blanc | 12 | 0,39 / 1,16 | **0,73 / 2,20** | 16 PA → 14, mana −4 → −2, zèle −4 → −1 (deux modes) |
+| *Frappe de l'Éclipse* | Mage Blanc | 11 | 0,53 | **1,22** | mana −3 → −1, zèle −2 → retiré |
+
+Effet sur les paliers : le N10‑12 du **Moine** passe de 0,49 à **1,23**, celui du **Mage Blanc** de 0,46 à **0,98**. Les deux restent sous leur N7‑9 (1,87 et 1,51), et le reliquat est entièrement porté par les cartes volontairement laissées de côté.
+
+**Ce qui n'a PAS été touché, et pourquoi.** Deux familles, à trancher en partie plutôt que sur tableur :
+
+- *Dépend de la convention sur X* : *Paume de l'Aube* (N12, convertisseur PA→PV 1:1 sans plafond), *Bague de soins* (N10 ×3), *Poings Des Cent Formes* (N10 ×2), *Sentence maudite* (Mage Blanc N10 ×2). Leur rendement monte avec X ; la grille le pose à 2, c'est-à-dire au plancher.
+- *Invisible pour la grille, le paiement est dans la prose* : *Cape Inhibitrice* (N11 ×3, retire un effet néfaste pour 2 PA), *Souffle Perpétuel* (N10, **+1 zèle au début de chacun de vos tours sans plus rien payer** — un moteur permanent que la mesure vaut 0), *Fantôme Majeur* (Mage Blanc N12, lève un fantôme à +1..5 dégâts contre autant de malus).
+
+Enfin, *Dissimulation* (N11, 2,55) et *Poing Rouge* (N12, 3,13) chez le Moine étaient déjà au-dessus de la cible : rien à y faire.
+
+---
 
 ### Fin de chantier — Transformer ce fichier en aide de jeu pour les joueurs
 Une fois **toutes les étapes ci-dessus réalisées**, ce document cesse d'être une note de conception et devient une **aide pour les joueurs** qui décrit chaque classe.
@@ -232,6 +294,108 @@ Stats de départ notables (détail dans « Stats de départ ») : **critique** d
 - Les dégâts de zone ne font pas beaucoup moins de dégâts que les sorts monocibles (on ne divise pas les dégâts entre les cibles)
 - Environ 40 cartes différentes par deck au niveau 12 sauf guerrier runique
 - **Le ratio générateurs / consommateurs de zèle n'est pas une contrainte de niveau.** Une classe n'a pas à pouvoir payer toutes ses cartes avec ses seuls générateurs, et un niveau qui n'ouvre que des consommateurs n'est pas un défaut : le zèle est une ressource que **le joueur** choisit d'alimenter, en gardant assez de cartes génératrices dans son deck pour lancer ensuite les plus puissantes. Le ratio de `npm run report:classes` sert à vérifier qu'une classe a de quoi en produire dans son catalogue, pas à équilibrer palier par palier.
+
+### Grille de valorisation des cartes
+
+> Section de travail : elle relève des « hypothèses de calcul » et disparaît en fin de chantier.
+
+Mesurer une carte sur ses seuls `damage`/`heal` ne marche pas : **503 effets répartis sur 321 des 563 modes** portent une part de la puissance, et de 7 % (Élémentaliste) à 45 % (Illusionniste) des modes payants d'une classe n'ont ni dégâts ni soins. Cette grille ramène tout en **dégâts équivalents**, la seule unité commune.
+
+#### Ancres
+
+| Ancre | Valeur | Origine |
+|---|---|---|
+| 1 point d'action | **1,25 dégât** | régression sur les 134 cartes à dégâts des neuf decks |
+| 1 mana | **≈ 2,9 PA** | même régression |
+| 1 zèle | **≈ 4,7 PA** | même régression |
+| Attaque de référence | **6 / 7 / 8 / 12** aux paliers N1‑3 / N4‑6 / N7‑9 / N10‑12 | médiane de 127 cartes mono‑cible à formule résolue |
+| Soin d'une incantation | **4,5 / 5,5 / 8,8 / 19,2** aux mêmes paliers | médiane des 42 modes de soin des neuf decks |
+| 1 point de vie | **1 dégât**, soit 0,8 PA | un PV payé est un PV à refaire soigner |
+| 1 carte défaussée | **quartile bas des valeurs de la classe** | on jette ses cartes les plus faibles, et la main est la ressource qui contraint |
+| PA max moyen | **10,3 / 14,0 / 17,5 / 21,4** aux mêmes paliers | profils de `npm run report:classes` |
+| 1 point d'esquive ou de critique | **5 % d'une attaque** | seuil `21 − score` sur 1d20 |
+| Avantage ou désavantage | **16,5 % d'une attaque** | espérance du meilleur de 2d20 (+3,3) |
+| Zone sans division des dégâts | **3 cibles** | convention, cf. « Règles générales » |
+
+#### Valeur des statuts du registre
+X²  
+Valeurs calculées au palier indiqué, d'après les effets canoniques de `StatusEffects.#REGISTRY` (`src/domain/system/effects/status-effects.js`) — c'est lui qui fait foi, pas la description de la carte.
+
+| Statut | Effet canonique | N4‑6 | N10‑12 |
+|---|---|---|---|
+| `poison` | +1 dégât/tour, **durée illimitée**, se duplique → 1, 2, 3, 4… | **15** (horizon 5 tours) | 15, non borné |
+| `acid` | trois effets empilés : 4 dégâts, puis 2, puis 1 | 7 | 7 |
+| `burn` | +1 dégât/tour pendant 3 tours | 3 | 3 |
+| `frost` | −1 PA max pendant 3 tours | 3,8 | 3,8 |
+| `earth` | −1 esquive pendant 4 tours | 1,4 | 2,4 |
+| `air` | −5 ft pendant 2 tours — positionnel, non chiffrable | **0** | **0** |
+| `curse`, `haunt` | **aucun effet mécanique** : marque persistante comptée par les cartes combo | **0** | **0** |
+| `virus` | PV max rabattus sur les PV courants jusqu'à la fin du combat : plus aucun soin ne prend. Vaut **deux incantations de soin refusées** | **11** | **38** |
+| `empowered`, `exposed`, `shaken` | avantage ou désavantage sur **un seul** jet | 1,2 | 2,0 |
+| `warded`, `poisoned`, `blinded`, `frightened`, `invisible` | désavantage pendant la durée de la carte | 1,2 / tour | 2,0 / tour |
+| `restrained`, `grappled`, `prone` | tour partiellement perdu (0,3 tour) | 5,2 | 8,0 |
+| `stunned`, `paralyzed`, `incapacitated`, `petrified`, `unconscious` | **le tour de la cible est perdu** : PA max × 1,25 | 17,5 | 26,8 |
+| `charmed` | demi‑tour perdu | 8,8 | 13,4 |
+| `disengaged` | ne provoque plus d'attaque d'opportunité — positionnel | **0** | **0** |
+
+Les entraves dures valent donc plus cher que n'importe quelle carte de dégâts du jeu, et `poison` vaut cinq fois `burn` pour la même famille d'effet.
+
+`virus` est le seul statut dont la valeur dépende de l'adversaire : deux incantations, c'est la borne basse de ce qu'un soigneur place dans les tours restants quand la carte tombe — et **zéro** si le camp d'en face ne soigne pas. Trois sorts de PNJ sur trente soignent (6,5 à 11,5 PV par incantation), aucun sbire ne régénère : c'est le MJ qui décide si la carte vaut quelque chose. On la chiffre pour le cas où elle sert, comme on chiffre un contre-sort. Les PV temporaires sont un pot séparé et ne sont pas concernés.
+
+#### Valeur des effets libres (`changes` sans statut)
+
+| Clé modifiée | Conversion |
+|---|---|
+| `system.fq.bonus.dot` | valeur × 3 tours |
+| `system.fq.bonus.damage`, `system.fq.bonus.heal`, `system.rolls.damage.*` | valeur × durée |
+| `system.attributes.hp.tempmax`, `system.attributes.hp.value` | 1 PV = 1 dégât |
+| `system.fq.action.max`, `system.fq.action.value` | valeur × 1,25 × durée |
+| `system.fq.attributes.evasion`, `system.fq.attributes.critical` | valeur × 5 % × attaque de référence × durée |
+| `system.fq.zeal.*` | valeur × 4,7 |
+| `system.fq.cards.pick`, `system.fq.cards.hand` | valeur × 2 × durée |
+| `system.attributes.movement.speeds.walk`, `system.fq.bonus.range` | **0** — positionnel |
+| `system.fq.cardBonus.*`, `system.fq.minions.*` | **hors grille** — économies propres, cf. plus bas |
+
+#### Onze règles sans lesquelles la grille donne n'importe quoi
+
+1. **Le déclenchement est une égalité stricte.** `CardEffect.playApplyEffectsFormulas` compare `effect.result === total` : `formula: "1d4"` avec `result: "4"` vaut **25 %**, pas « 4 ou plus ». Sur les 503 entrées, 397 sont certaines, 30 à 33 %, 22 à 25 %, 9 à 50 %, 45 dépendent d'un `XXX`. Toute valeur doit être pondérée par cette probabilité. Aucun effet n'est mort aujourd'hui : pas un `result` hors des valeurs atteignables par sa formule.
+2. **Les valeurs sentinelles sont des états, pas des points.** `999999` d'esquive veut dire *intouchable*, `−999999` de bonus de dégâts veut dire *ne fait plus de dégâts*. Cinq cartes en portent (*Dissimulation*, *Garde absolue*, *Immatérialité*, *Bouclier Divin*, *Canalisation Des Ombres*). Les valoriser au prorata donne des centaines de milliers ; il faut les traiter comme la famille « immunité » : un tour adverse évité ≈ 3 attaques de référence.
+3. **Un malus sur soi est un coût, pas une valeur négative.** Huit cartes s'infligent un malus par leurs effets, hors des champs `action`/`mana`/`zeal` — dont les cinq armes de jet du Maître d'Armes à −5 PA au tour suivant. Il entre au dénominateur. Sans ça, *Chakram* ressort première carte du jeu à 15 de valeur par PA, contre 4,3 en réalité.
+4. **Les coûts sont parfois des formules.** 50 champs `action` ne sont pas numériques (`-8+@cha` pour *Croix De Squelettes*). Les lire comme nuls écarte 38 modes de toutes les moyennes et rend gratuites des cartes qui ne le sont pas. 65 modes, eux, n'ont réellement aucun coût en PA — réactifs, passifs ou gratuits par construction : les compter comme payants fausse l'autre bout de la moyenne.
+5. **Un malus posé sur un ennemi vaut autant qu'un bonus sur soi.** Le signe du `change` dit où va l'effet, pas s'il est bon : −@int d'esquive sur la cible est un gain pour le lanceur. Le compter négativement donne des cartes à valeur négative (*Brouillard* ressortait à −12,8) et pénalise exactement les classes à debuffs — l'Illusionniste y gagne 13 points d'angle mort, le Maître d'Armes passe de 1,41 à 1,80 de valeur par PA.
+6. **Les PV et les cartes sont des coûts, au même titre que les PA.** Le champ `hp` négatif (12 modes du Gardien, 49 PV en tout) et le champ `drop` (25 modes des neuf decks, jusqu'à 4 cartes) ne coûtent rien dans les champs de ressource. Les ignorer rend *Baroud D'Honneur* à 9,33 de valeur par PA-équivalent, cinq fois la norme de sa classe ; comptés, elle retombe à 0,97, dans la norme. Le Gardien et l'Élémentaliste portent presque toute cette dette.
+7. **Le champ `hp` positif et un effet `tempmax` ne se cumulent pas.** `hp` remplit la réserve que `tempmax` vient d'ouvrir : le gain réel vaut une fois, pas deux. Sept modes portent les deux, dont les six cartes de PV temporaires du Gardien — *Essor Vital* ressortait à 29 de valeur pour 14 réels. Les six autres modes à `hp` positif (Moine, Mage Blanc) sont de vrais soins, sans doublon.
+8. **Une durée vide vaut jusqu'à la fin du combat, pas un tour.** Le registre et les cartes écrivent `duration: ""` pour « jusqu'à la fin du combat » : c'est le cas de `poison`, `curse`, `haunt`, et de **21 changes par tour** répartis sur quatre cartes du Gardien (*Chair de Berzerker*, *Soif De Sang*, *Rage Ultime*, *Chair De Titan*), deux du Moine (*Gant De Fer*, *Posture Du Roseau*), six runes du Guerrier Runique et cinq cartes de la Sorcière. La grille retient **3 tours restants** quand la carte tombe — la borne basse, cohérente avec l'horizon de `poison`.
+9. **Le mana et le zèle RENDUS sont de la valeur.** Les champs `mana` et `zeal` sont bidirectionnels comme `hp` : négatif c'est un coût, positif c'est un gain. Les neuf decks rendent **178 points de zèle et 22 de mana**, soit **1 123 dégâts équivalents** aux taux de la grille (1 zèle = 5,9 dégâts, 1 mana = 3,6). Les ignorer rend tous les générateurs de zèle gratuits en valeur et payants en coût : l'angle mort résiduel tombe de 24‑45 % à **0‑12 %** pour six classes sur sept quand on les compte, et le verdict du Gardien et du Moine s'inverse.
+10. **`bonusCrit` très négatif veut dire « incritiquable », et ça coûte cher.** Le seuil étant `21 − crit − bonusCrit` sur 1d20, un `bonusCrit` de −9999 ferme définitivement le critique. Le prix dépend du critique de la classe : **31 % des dégâts de la carte pour le Trapper** (critique 6,2 au N12, le plus haut du jeu), 22 % pour le Gardien, 11 % pour l'Élémentaliste, **0 % pour le Moine** qui n'a jamais de critique. C'est donc un contrepoids auto-punitif : la classe qui s'en sert le plus est celle qui le paie le plus. La sentinelle est écrite de quatre façons dans les données (−9999, −99999, −999999, −999999999) pour un seul et même effet.
+11. **Un bonus de dégâts s'applique à chaque attaque, pas une fois par tour.** `system.fq.bonus.damage` et `system.rolls.damage.*` se multiplient par le nombre d'attaques portées, pas par le nombre de tours. La grille retient **2 attaques par tour**, la borne basse (les classes jouent 2,7 à 4,8 cartes par tour). Sans ça, *Gant De Fer* valait 3 au lieu de 6, et les paliers du Gardien — qui porte six effets de ce type — étaient sous-évalués d'un tiers.
+
+#### Deux classes hors comparaison
+
+La Sorcière et le Guerrier Runique ne se mesurent pas en dégâts par PA : leur monnaie n'en est pas une.
+
+| Classe | Unité propre | Mesure |
+|---|---|---|
+| Sorcière | dégâts de sbires par tour | Chaque squelette a 10 PA et son arme en coûte 8 : il **attaque une fois par tour**, pour 1 à 10 dégâts selon son type. Tous exemplaires confondus, **264 PA-équivalent pour 49 dégâts par tour**, soit 0,19 par PA-équivalent et par tour — contre 0,66 **une seule fois** pour une carte de dégâts directs. Une invocation est donc rentable à partir du 4ᵉ tour. Second poste : le **score de sacrifice**, remis à 0 à chaque combat. |
+| Guerrier Runique | runes tirées, puis compteurs de couleur | Son deck de base ne compte que **15 cartes**, dont **11 identiques** : une *Frappe runique* par niveau de N1 à N11 (7 PA + 1 mana, +1 zèle) qui tire une carte dans le deck de sa couleur. Les 117 cartes de rune sont le vrai contenu : 80 modes à effet seul, 10 soins, 9 dégâts, médiane 3 PA. Chaque rune incrémente son compteur, et des cartes de paiement le multiplient. |
+| Maître d'Armes (partiellement) | bonus de couteau accumulé | **28 % de son deck de base** (12 cartes) alimente `cardBonus.knife`, que la grille vaut 0. Le couteau coûte **0 PA**, est `ephemere`, et existe en 24 exemplaires dans son deck généré. |
+| Illusionniste (partiellement) | portée accumulée | **35 % de son deck de base** (18 modes) tient au compteur `fq.bonus.range`, que la grille vaut 0 à l'accumulation : 7 cartes en 17 exemplaires ajoutent +1 chacune, 9 cartes en 15 exemplaires la dépensent comme dégâts ou soins. |
+
+La spécialisation bêtes du Trapper (4 modes d'invocation) relève de la même logique et sort de sa moyenne.
+
+#### Ce que la grille ne voit toujours pas
+
+| Classe | Angle mort résiduel | Classe | Angle mort résiduel |
+|---|---|---|---|
+| Élémentaliste | 0 % | Mage Blanc | 11 % |
+| Gardien | 8 % | Moine | 12 % |
+| Trapper | 8 % | Maître d'Armes | **34 %** |
+| Illusionniste | 9 % | | |
+
+C'est la part des modes payants que la grille vaut délibérément 0 : marques, déplacements, portée, pioche et défausse. Les 34 % du Maître d'Armes sont son moteur de couteaux, qui relève des économies propres. Deux réserves à garder en tête avant de conclure quoi que ce soit d'un écart entre classes :
+
+- la valorisation du **Mage Blanc** tient à une seule hypothèse, le nombre de marques présentes quand une carte combo les consomme (2 par défaut) — toute sa courbe bouge avec ce chiffre ;
+- les variables de jeu (`XXX` lu sur un script, un compteur d'états, une portée cumulée) sont posées à 2 par convention, c'est-à-dire au plancher. La part des modes qui en dépendent va de **5 %** (Maître d'Armes) et 7 % (Guerrier Runique) à 25‑34 % pour six classes, et **55 % pour le Moine** — deux fois la suivante. Une classe très exposée doit être lue avec un test de sensibilité : au Moine, passer X de 2 à 6 fait monter le palier N10‑12 de 0,33 à 0,76 de valeur par PA-équivalent. Les cartes qui en dépendent se relisent à la main, elles ne se classent pas.
 
 ---
 

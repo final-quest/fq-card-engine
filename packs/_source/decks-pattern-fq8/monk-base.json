@@ -3587,9 +3587,9 @@
               "saveAbility": "",
               "hitBonus": "",
               "saveDc": "",
-              "action": "-8",
+              "action": "-6",
               "mana": "0",
-              "zeal": "-3",
+              "zeal": "-1",
               "reactive": false,
               "hp": "",
               "draw": "",
@@ -3642,7 +3642,7 @@
                           "changes": [
                             {
                               "key": "system.fq.bonus.damage",
-                              "value": "1",
+                              "value": "3",
                               "type": "add",
                               "priority": null
                             }
