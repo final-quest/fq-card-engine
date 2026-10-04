@@ -51,6 +51,23 @@ function damageLog({attacker = "foe", targetActorId = "me", targetTokenId = "tok
     };
 }
 
+/**
+ * Entrée de log d'une ATTAQUE dnd5e telle que `dnd5e.hook.js` l'inscrit : pas de
+ * nom de carte, et un contenu journalisé qui ne porte AUCUNE ressource FQ —
+ * ni `mana`, ni `zeal`, ni `action`. C'est la forme qui faisait rater tous les
+ * prédicats filtrant sur un champ de carte.
+ */
+function dnd5eAttackLog({attacker = "foe", targetActorId = "me", targetTokenId = "tokMe", value = 5, round = 2} = {}) {
+    return {
+        actorId: attacker,
+        targetsId: [targetActorId],
+        cardName: null,
+        round,
+        resultArray: {0: {type: "damageFQ", value, evasion: false, targetTokenId}},
+        cardContent: {heal: 0, damage: "1d8 + 3", minReach: 0, maxReach: 1, bonusCrit: 0, bonusEva: 0}
+    };
+}
+
 describe("CardCondition — prédicats de logs de combat", () => {
 
     it("tookDamageThisRound : vrai si une entrée de dégâts effectifs touche mon token ce round", () => {
@@ -112,15 +129,35 @@ describe("CardCondition — prédicats de logs de combat", () => {
         expect(CardCondition.attackerWithinReach(1)).toBe(false);
     });
 
-    it("tookSpellThisRound : vrai si une carte à coût de mana m'a ciblé ce round", () => {
+    it("wasTargetedThisRound : vrai pour toute action d'un autre acteur qui m'a ciblé", () => {
         mountScene({tokens: [me()], logs: [damageLog({cardContent: {mana: -1}})]});
-        expect(CardCondition.tookSpellThisRound()).toBe(true);
+        expect(CardCondition.wasTargetedThisRound()).toBe(true);
 
-        mountScene({tokens: [me()], logs: [damageLog({cardContent: {mana: 2}})]});
-        expect(CardCondition.tookSpellThisRound()).toBe(false);
+        // Une carte SANS coût de mana compte : « un sort quelconque » ne veut pas
+        // dire « une carte de mage ».
+        mountScene({tokens: [me()], logs: [damageLog({cardContent: {mana: ""}})]});
+        expect(CardCondition.wasTargetedThisRound()).toBe(true);
+    });
 
+    it("wasTargetedThisRound : vrai aussi pour une arme ou une compétence dnd5e", () => {
+        mountScene({tokens: [me()], logs: [dnd5eAttackLog()]});
+        expect(CardCondition.wasTargetedThisRound()).toBe(true);
+    });
+
+    it("wasTargetedThisRound : faux si la cible est un autre, si c'est moi qui agis, ou hors combat", () => {
         mountScene({tokens: [me()], logs: [{actorId: "foe", targetsId: ["autre"], round: 2, cardContent: {mana: -1}}]});
-        expect(CardCondition.tookSpellThisRound()).toBe(false);
+        expect(CardCondition.wasTargetedThisRound()).toBe(false);
+
+        // « Subir » suppose une source extérieure : ma propre carte sur moi-même
+        // ne déclenche rien.
+        mountScene({tokens: [me()], logs: [damageLog({attacker: "me"})]});
+        expect(CardCondition.wasTargetedThisRound()).toBe(false);
+
+        mountScene({tokens: [me()], logs: [damageLog({round: 1})]});
+        expect(CardCondition.wasTargetedThisRound()).toBe(false);
+
+        mountScene({tokens: [me()], logs: null});
+        expect(CardCondition.wasTargetedThisRound()).toBe(false);
     });
 
     it("attackEvadedThisRound : vrai si l'une de mes attaques du round a été esquivée", () => {

@@ -3,7 +3,7 @@ Update 3.0.0:
         - Content split: Elementalist, Monk and Trapper ship with this module, the six other classes move to FQ Card Engine Extended
         - FQ class registry: classes are no longer hardcoded in the schema, the extended module registers its own
         - Two new classes, Runic Warrior and Fencing Master, with their tokens, decks and illustrations
-        - Every class deck reworked up to level 10 (12 for some), with 22 balance passes and a full characterisation pass
+        - Every class deck reworked up to level 10 (12 for some), with 22 balance passes, eight final tuning passes and a full characterisation pass
         - Neutral cards become common cards, added to the spellbooks at the right levels, up to level 20
         - White Mage gets the Haunting specialization and its ghost minion
         - Crescendo becomes a monk spell
@@ -22,7 +22,7 @@ Update 3.0.0:
         - Ephemeral cards: playing one destroys it for good
         - Generated cards replace the "JSON after use": cards are generated in hand from a choice offered to the player, and can be deleted from the discard
         - A card from the hand can be duplicated
-        - Cards can be retrieved from the discard or from the deck back into the hand (all of them, or a given list)
+        - Cards can be retrieved from the discard or from the deck back into the hand, through the same UI on both sides (all of them, a given list, or a number of random ones from the discard)
         - When the deck is empty the discard is shuffled back into it, and fatigue deals damage on every reshuffle - the Runic Warrior is the only one able to lower the fatigue score
         - Base cards become innate cards and can be deleted
         - Reactive cards can be prepared during your turn and are highlighted when they become usable
@@ -48,6 +48,7 @@ Update 3.0.0:
         - Death saving throws and the initiative rolled on joining combat move to FQ Enhanced Combat
     Chore:
         - Version bump 14.368 and dnd5e 6.0.3, with the compendiums migrated (DAE 14.0.14, Sequencer 4.2.3)
+        - The bundled visual effects are gone: the FX are read from JB2A and no longer redistributed with the module
         - Versions aligned across FQ Card Engine, FQ Enhanced Combat and FQ Restrain Movement: the three modules are published together
         - Repository moved to the final-quest GitHub organization, with a release pipeline that lints, tests, compiles the packs and publishes the release
         - LevelDB packs are no longer versioned, only their JSON sources in packs/_source (npm run build)
@@ -55,14 +56,14 @@ Update 3.0.0:
         - A utils pack to keep the pack scripts in a single place
         - LF line endings everywhere, to match what build:json writes
         - Code audit, duplication refactor and dead code removal
-        - Test world updated with the new classes
+        - Test world updated with the new classes, migrated to the dnd5e 6 data model, and its UAT population script fixed
         - Class balance report (npm run report:classes) and CLASSES.md documentation
     Fix:
         - Fix the OpenDeck button in the player hand
         - Cards sorted by level then by name in the decks, and the broken button removed
         - Limiting the player rights no longer removes targeting and movement on the tokens
         - Token HUD buttons follow the rights on the token's actor
-        - The damage flicker no longer leaves the token invisible
+        - The damage flicker no longer leaves the token invisible, and no longer writes the opacity on the token document
         - Ephemeral cards are destroyed at the right time and show the right card back
         - Free necromancy after the first use through a generated card
         - Instant curse: the logs it relies on do not always carry the right actors or targets
@@ -72,7 +73,7 @@ Update 3.0.0:
         - Damage formulas used when an activity has damage but no attack
         - Card descriptions resized when they overflow the frame
         - Fix Light Energy and Improved Fire Ray descriptions
-        - Fix orphan translations and i18n keys
+        - Fix orphan translations, i18n keys, and the localisation of the macros and the compendiums
         - Fix image paths
         - The result window test no longer depends on the speed of the machine
         - Opportunity attacks: FX on the right token, and the reaction reserved to combatants

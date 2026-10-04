@@ -354,19 +354,35 @@ export default class CardCondition {
     }
 
     /**
-     * Indique si l'acteur a subi un sort durant le round courant — c'est-à-dire
-     * une carte à coût de mana (mana négatif) jouée en le ciblant.
+     * Indique si l'acteur a subi l'action d'un AUTRE acteur durant le round
+     * courant — n'importe quelle carte, ou n'importe quelle activité dnd5e
+     * (arme, compétence, sort du système) qui l'a pris pour cible.
+     *
+     * Le journal de combat est la seule source, et il porte les DEUX origines :
+     * les cartes passées par `CardEffect` et les activités dnd5e résolues par le
+     * moteur (`dnd5e.rollDamageV2`), ces dernières sans nom de carte. C'est ce
+     * qui permet à un réactif de répondre à un coup d'épée comme à un sort —
+     * aucun filtre ne doit donc porter sur un champ que seules les cartes
+     * remplissent : le contenu journalisé d'une activité dnd5e ne connaît ni
+     * `mana`, ni `zeal`, ni `action`.
+     *
+     * Limite connue : une activité dnd5e qui ne jette NI dégât NI soin
+     * n'atteint jamais `rollDamageV2`, n'est pas journalisée, et reste donc
+     * invisible ici comme pour tous les autres prédicats de log.
+     *
+     * Une action de l'acteur sur lui-même ne compte pas : « subir » suppose une
+     * source extérieure.
      *
      * @param {object} [actor] - L'acteur ; à défaut, le personnage de l'utilisateur.
      *
-     * @returns {boolean} True si un sort l'a ciblé ce round.
+     * @returns {boolean} True si l'action d'un autre acteur l'a ciblé ce round.
      */
-    static tookSpellThisRound(actor = Constants.actorCurrent) {
+    static wasTargetedThisRound(actor = Constants.actorCurrent) {
         if (!actor?.id) {
             return false;
         }
         return CardCondition.#logsThisRound()
-            .some(l => l.targetsId?.includes(actor.id) && Number(l.cardContent?.mana) < 0);
+            .some(l => l.actorId !== actor.id && l.targetsId?.includes(actor.id));
     }
 
     /**

@@ -405,7 +405,7 @@
               "hasBeenPlayed": false,
               "customEvals": [
                 {
-                  "script": "FqCardEngineModule.cond.tookSpellThisRound()",
+                  "script": "FqCardEngineModule.cond.wasTargetedThisRound()",
                   "errorMessages": [
                     {
                       "key": "FQCARDENGINE.CardWarningMsgNoSpellTakenThisRound",
