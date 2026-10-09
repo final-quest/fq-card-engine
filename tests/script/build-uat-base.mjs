@@ -98,9 +98,9 @@ async function exists(p) {
 
 function buildStats(overrides = {}) {
     return {
-        coreVersion: "14.367",
+        coreVersion: "14.369",
         systemId: "dnd5e",
-        systemVersion: "6.0.1",
+        systemVersion: "6.0.6",
         createdTime: FIXED_STATS_TIME,
         modifiedTime: FIXED_STATS_TIME,
         lastModifiedBy: GM_USER_ID,

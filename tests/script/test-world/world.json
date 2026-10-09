@@ -2,12 +2,12 @@
   "title": "test-world",
   "id": "test-world",
   "system": "dnd5e",
-  "coreVersion": "14.368",
+  "coreVersion": "14.369",
   "compatibility": {
     "minimum": "14",
-    "verified": "14.368"
+    "verified": "14.369"
   },
-  "systemVersion": "6.0.5",
+  "systemVersion": "6.0.6",
   "lastPlayed": "Tue Sep 29 2026 20:18:40 GMT+0200 (heure d’été d’Europe centrale)",
   "playtime": 2085,
   "safeMode": false,
