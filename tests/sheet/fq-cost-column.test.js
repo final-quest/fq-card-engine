@@ -1,5 +1,5 @@
 import {describe, expect, test} from "vitest";
-import {FQ_COST_COLUMN, fqCostEntries, withFqCostColumn} from "../../src/domain/interface/sheet/actor/fq-cost-column.js";
+import {FQ_COST_COLUMN, fqCostEntries, withFqCostColumn, withSortedFqCostColumn} from "../../src/domain/interface/sheet/actor/fq-cost-column.js";
 
 function makeItem(fq, activityCount = 1) {
     const activities = new Map(Array.from({length: activityCount}, (_, i) => [`a${i}`, {}]));
@@ -61,6 +61,29 @@ describe("fq-cost-column", () => {
 
         test("tolère une section sans colonnes", () => {
             expect(withFqCostColumn(undefined)).toEqual([FQ_COST_COLUMN]);
+        });
+    });
+
+    describe("withSortedFqCostColumn", () => {
+        test("insère la colonne à sa place d'après l'ordre des colonnes", () => {
+            const columns = [{id: "uses", order: 650}, {id: "controls", order: 1000}];
+
+            const result = withSortedFqCostColumn(columns);
+
+            expect(result.map(column => column.id)).toEqual(["fqCost", "uses", "controls"]);
+            expect(columns).toHaveLength(2);
+        });
+
+        test("place les colonnes sans ordre avant la colonne « Coût FQ »", () => {
+            const result = withSortedFqCostColumn([{id: "school"}]);
+
+            expect(result.map(column => column.id)).toEqual(["school", "fqCost"]);
+        });
+
+        test("n'ajoute pas la colonne deux fois", () => {
+            const once = withSortedFqCostColumn([{id: "controls", order: 1000}]);
+
+            expect(withSortedFqCostColumn(once)).toBe(once);
         });
     });
 });

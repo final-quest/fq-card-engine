@@ -68,3 +68,21 @@ export function withFqCostColumn(columns = []) {
     }
     return [...columns, {...FQ_COST_COLUMN}];
 }
+
+/**
+ * Ajoute la colonne « Coût FQ » à des colonnes déjà préparées par dnd5e, où
+ * `Inventory.prepareSections` a converti chaque colonne en descripteur et les a
+ * triées par ordre. Le tri est refait pour que la colonne reprenne sa place
+ * après le nom de l'objet au lieu d'être rejetée en fin de ligne.
+ *
+ * @param {object[]} columns - Les descripteurs de colonnes de la section.
+ *
+ * @returns {object[]} Les colonnes, complétées de la colonne « Coût FQ » et retriées.
+ */
+export function withSortedFqCostColumn(columns = []) {
+    const completed = withFqCostColumn(columns);
+    if (completed === columns) {
+        return columns;
+    }
+    return completed.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+}
