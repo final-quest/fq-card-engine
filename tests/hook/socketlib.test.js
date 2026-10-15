@@ -1,7 +1,7 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
 import {socket} from "../../src/hook/integration/socketlib.hook.js";
 
-// Les 17 handlers enregistrés côté MJ par socket-lib.js au hook "socketlib.ready".
+// Les 18 handlers enregistrés côté MJ par socket-lib.js au hook "socketlib.ready".
 // Cette liste sert aussi de verrou pour T-04-03 (surface exposée sans auth) :
 // tout ajout/retrait de handler doit être reflété ici consciemment.
 const HANDLER_NAMES = [
@@ -27,7 +27,10 @@ const HANDLER_NAMES = [
     "blinkToken",
     // Purement visuel : n'écrit rien, se contente d'afficher chez les spectateurs
     // le rapport de jet que le lanceur vient de leur diffuser.
-    "showResultWindow"
+    "showResultWindow",
+    // N'écrit que des réglages client de volume audio, sur le client qui le
+    // reçoit : aucun document du monde n'est touché.
+    "applyGlobalVolumes"
 ];
 
 describe("socket-lib", () => {
@@ -38,7 +41,7 @@ describe("socket-lib", () => {
         globalThis.FqCardEngineModule = undefined;
     });
 
-    it("enregistre les 17 handlers socket au hook socketlib.ready", () => {
+    it("enregistre les 18 handlers socket au hook socketlib.ready", () => {
         const registeredSocket = {register: vi.fn()};
         globalThis.socketlib = {registerModule: vi.fn(() => registeredSocket)};
         globalThis.FqCardEngineModule = {moduleName: "fq-card-engine"};

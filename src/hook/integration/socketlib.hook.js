@@ -10,6 +10,7 @@ import ResultWindow from "../../domain/interface/window/result-window.js";
 import {registerResultBroadcaster} from "../../domain/engine/roll/result-presenter.js";
 import ZoneWall from "../../domain/engine/shared/zone-wall.js";
 import Fx from "../../domain/engine/shared/fx.js";
+import {applyGlobalVolumes} from "../../core/utils/audio.utils.js";
 
 /**
  * Instance socketlib du module, initialisée au hook `socketlib.ready`.
@@ -40,6 +41,9 @@ Hooks.once("socketlib.ready", () => {
     // Le clignotement de dégâts se joue dans le canvas de CHAQUE client : il ne
     // passe pas par le document du token, qui en persisterait l'opacité basse.
     socket.register("blinkToken", Fx.blinkToken);
+    // Les volumes globaux sont des réglages client : seul le client concerné peut
+    // les écrire, le MJ ne fait que lui transmettre les siens.
+    socket.register("applyGlobalVolumes", applyGlobalVolumes);
     // Le résultat s’affiche chez TOUT LE MONDE : sans chat animé ni dés 3D, un
     // spectateur privé de cette fenêtre ne verrait plus rien du jet, seulement
     // des barres de vie qui tombent sans explication.

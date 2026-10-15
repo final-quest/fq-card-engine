@@ -1,0 +1,27 @@
+{
+  "name": "Push audio volumes to all players (GM)",
+  "type": "script",
+  "img": "icons/magic/sonic/projectile-sound-rings-wave.webp",
+  "author": "uUbINdqSmS5ll9IK",
+  "scope": "global",
+  "command": "// Aligne les volumes Musique / Environnement / Interface de tous les clients\n// connectés sur ceux du MJ. Ces trois réglages sont propres au navigateur de\n// chaque utilisateur : la diffusion passe par le socket du module.\nFqCardEngineModule.audio.pushVolumes();",
+  "folder": null,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.369",
+    "systemId": "dnd5e",
+    "systemVersion": "6.0.6",
+    "createdTime": 1792022400000,
+    "modifiedTime": 1792022400000,
+    "lastModifiedBy": "dnd5ebuilder0000",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_id": "fqPushVolumes001",
+  "sort": 0,
+  "_key": "!macros!fqPushVolumes001"
+}
