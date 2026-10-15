@@ -2,6 +2,7 @@ import {beforeAll, describe, expect, it} from "vitest";
 import path from "node:path";
 import {buildUatPlan, loadDeckVariants, loadMinions} from "../script/uat/plan.mjs";
 import {classSlugs, loadClassCatalog} from "../script/uat/classes.mjs";
+import {MAX_CLASS_LEVEL} from "../../src/domain/classes.js";
 import {loadMonsterIndex} from "../script/uat/monsters.mjs";
 
 /**
@@ -68,7 +69,8 @@ describe("buildUatPlan — priorité des surcharges (les sept axes)", () => {
     });
 
     it("level: le niveau imposé se retrouve dans overrides et dans la somme des classes", () => {
-        const plan = build(1, {class: CLASS_A, level: 17});
+        // Deux classes : au-delà du niveau 12, aucune classe ne peut porter le total seule.
+        const plan = build(1, {class: `${CLASS_A},${CLASS_B}`, level: 17});
         expect(plan.overrides.level).toBe(17);
         expect(plan.hero.classes.reduce((sum, c) => sum + c.level, 0)).toBe(17);
     });
@@ -123,9 +125,40 @@ describe("buildUatPlan — multi-classe", () => {
     });
 });
 
+describe("buildUatPlan — plafond de niveau par classe", () => {
+    it("aucune classe ne dépasse le plafond sur un plan entièrement tiré", () => {
+        for (let seed = 1; seed <= 60; seed++) {
+            const plan = build(seed);
+            for (const entry of plan.hero.classes) {
+                expect(entry.level).toBeLessThanOrEqual(MAX_CLASS_LEVEL);
+            }
+            expect(plan.hero.classes.reduce((sum, c) => sum + c.level, 0)).toBe(plan.overrides.level);
+        }
+    });
+
+    it("un niveau total imposé au-delà du plafond ouvre une seconde classe", () => {
+        const plan = build(1, {level: 20});
+        expect(plan.hero.classes.length).toBeGreaterThanOrEqual(2);
+        expect(plan.overrides.level).toBe(20);
+        for (const entry of plan.hero.classes) {
+            expect(entry.level).toBeLessThanOrEqual(MAX_CLASS_LEVEL);
+        }
+    });
+
+    it("rejette une classe explicitement portée au-delà du plafond", () => {
+        expect(() => build(1, {class: `${CLASS_A}:${MAX_CLASS_LEVEL + 1}`}))
+            .toThrow(/Niveau de classe hors intervalle/);
+    });
+
+    it("rejette un niveau total que les classes imposées ne peuvent pas porter", () => {
+        expect(() => build(1, {class: CLASS_A, level: MAX_CLASS_LEVEL + 1}))
+            .toThrow(/aucune classe ne peut dépasser le niveau/);
+    });
+});
+
 describe("buildUatPlan — picks de stats", () => {
     it("toutes les entrées de hero.picks référencent le compendium des stats de classe", () => {
-        const plan = build(42, {class: CLASS_A, level: 20});
+        const plan = build(42, {class: CLASS_A, level: MAX_CLASS_LEVEL});
         expect(plan.hero.picks.length).toBeGreaterThan(0);
         for (const pick of plan.hero.picks) {
             expect(pick.uuid).toMatch(/^Compendium\.fq-card-engine\.classes-stats-fq8\.Item\./);

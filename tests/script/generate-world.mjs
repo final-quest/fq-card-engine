@@ -152,7 +152,7 @@ function buildCli(argv) {
     return yargs(hideBin(argv))
         .option("seed", {type: "number", describe: "Graine du monde (tirée et affichée si omise)"})
         .option("class", {type: "string", describe: "slug[:niveau][,slug2[:niveau2]...]"})
-        .option("level", {type: "number", describe: "Niveau total du héros (1-20)"})
+        .option("level", {type: "number", describe: "Niveau total du héros (1-20, 12 au plus par classe)"})
         .option("enemies", {type: "string", describe: "Nombre, ou liste explicite (\"Goblin x3, Ogre\")"})
         .option("difficulty", {type: "string", describe: "easy | normal | hard | deadly"})
         .option("placement", {type: "string", describe: "packed | scattered | line | melee"})

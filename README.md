@@ -167,7 +167,7 @@ npm run testWorld:random -- --seed=12345 --class=elementalist:3,trapper:2 --leve
 |----------------|------------------------------------------------------------------------------------------------------|
 | `--seed`       | A number. When omitted, a seed is drawn and printed so the world can be replayed                     |
 | `--class`      | `slug[:level][,slug2[:level2]...]`, slugs taken from `packs/_source/classes-fq8` (e.g. `trapper`)     |
-| `--level`      | Total hero level (1-20)                                                                              |
+| `--level`      | Total hero level (1-20); no single class can go past level 12, so a higher total needs multiclassing |
 | `--enemies`    | A count (`4`) or an explicit list of monster names from the index (`"Goblin x3, Ogre"`)              |
 | `--difficulty` | `easy` \| `normal` \| `hard` \| `deadly`                                                             |
 | `--placement`  | `packed` \| `scattered` \| `line` \| `melee`                                                         |

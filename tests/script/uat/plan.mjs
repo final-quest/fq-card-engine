@@ -4,6 +4,7 @@ import {classSlugs, resolveAbilityScoreImprovements, resolveHitPoints, resolvePi
 import {DIFFICULTY_FACTORS, composeOpposition, crBudgetForLevel, parseEnemiesOption, resolveExplicitEnemies} from "./monsters.mjs";
 import {ARENA_AREA, PLACEMENT_PATTERNS, placeEncounter} from "./placement.mjs";
 import {createRng} from "./rng.mjs";
+import {MAX_CLASS_LEVEL} from "../../../src/domain/classes.js";
 
 /**
  * Construction du plan UAT (D-03) : tout le hasard est résolu ici, côté Node,
@@ -126,6 +127,25 @@ function assertValidLevel(level) {
 }
 
 /**
+ * Vérifie qu'un niveau de classe tombe dans l'intervalle [1, `MAX_CLASS_LEVEL`],
+ * sinon lève une erreur explicite AVANT toute écriture sur disque.
+ *
+ * @param {Array<{slug: string, level: number}>} classEntries - La répartition à valider.
+ *
+ * @returns {void}
+ * @throws {Error} Si une classe sort de l'intervalle, en citant la classe fautive.
+ */
+function assertValidClassLevels(classEntries) {
+    for (const {slug, level} of classEntries) {
+        if (!Number.isInteger(level) || level < 1 || level > MAX_CLASS_LEVEL) {
+            throw new Error(
+                `Niveau de classe hors intervalle 1-${MAX_CLASS_LEVEL}: "${slug}:${level}".`
+            );
+        }
+    }
+}
+
+/**
  * Analyse la surcharge `--class`. Chaque entrée est un slug éventuellement
  * suffixé par `:niveau` (`witch`, `witch:5`, `witch:5,guardian:3`).
  *
@@ -152,15 +172,20 @@ function parseClassOverride(raw) {
  * consommée quand `options.class` n'est pas fourni, pour préserver l'ordre de
  * consommation du flux aléatoire documenté sur `buildUatPlan`.
  *
- * @param {object} catalog - Le catalogue rendu par `loadClassCatalog`.
- * @param {object} rng     - Le RNG déterministe.
+ * `minClasses` relève le nombre tiré sans rien consommer de plus : un niveau
+ * total imposé au-delà de `MAX_CLASS_LEVEL` exige du multi-classe, puisqu'aucune
+ * classe ne peut le porter seule. La taille du catalogue reste la borne haute.
  *
- * @returns {string[]} Les slugs tirés (1 ou 2).
+ * @param {object} catalog        - Le catalogue rendu par `loadClassCatalog`.
+ * @param {object} rng            - Le RNG déterministe.
+ * @param {number} [minClasses=1] - Le nombre minimal de classes à rendre.
+ *
+ * @returns {string[]} Les slugs tirés.
  */
-function rollClassSlugs(catalog, rng) {
+function rollClassSlugs(catalog, rng, minClasses = 1) {
     const allSlugs = Object.keys(catalog);
     const wantsTwo = rng.bool(0.25);
-    const numClasses = wantsTwo ? 2 : 1;
+    const numClasses = Math.min(Math.max(wantsTwo ? 2 : 1, minClasses), allSlugs.length);
     return rng.sample(allSlugs, numClasses);
 }
 
@@ -290,7 +315,7 @@ function resolveEnemies({options, level, difficulty, monsterIndex, rng}) {
  * @param {number} params.seed                  - La graine du monde.
  * @param {object} [params.options]              - Les surcharges CLI (gagnent toujours sur le tirage).
  * @param {string} [params.options.class]        - `slug[:niveau][,slug2[:niveau2]...]`.
- * @param {number} [params.options.level]        - Le niveau total du héros (1-20).
+ * @param {number} [params.options.level]        - Le niveau total du héros (1-20, au plus `MAX_CLASS_LEVEL` par classe).
  * @param {string|number} [params.options.enemies] - Un compte, ou une liste explicite (`monsters.mjs`).
  * @param {string} [params.options.difficulty]   - Une clé de `DIFFICULTY_FACTORS`.
  * @param {string} [params.options.placement]    - Un motif de `PLACEMENT_PATTERNS`.
@@ -325,10 +350,22 @@ export function buildUatPlan({seed, options = {}, catalog, monsterIndex, minions
         if (anyExplicit && !allExplicit) {
             throw new Error("Surcharge --class: précisez un niveau pour toutes les classes (slug:niveau) ou pour aucune.");
         }
+        if (allExplicit) assertValidClassLevels(classOverrideEntries);
     }
 
-    const slugs = classOverrideEntries ? classOverrideEntries.map(entry => entry.slug) : rollClassSlugs(catalog, rng);
     const explicitLevelsGiven = Boolean(classOverrideEntries?.every(entry => entry.level !== undefined));
+
+    // Un niveau total imposé est connu AVANT le tirage des classes : il fixe le nombre
+    // minimal de classes à tirer, puisqu'aucune ne peut dépasser MAX_CLASS_LEVEL. Les
+    // valeurs hors bornes restent à la charge d'`assertValidLevel`, plus bas.
+    const requestedTotalLevel = !explicitLevelsGiven && options.level !== undefined ? Number(options.level) : NaN;
+    const minClasses = Number.isFinite(requestedTotalLevel)
+        ? Math.max(1, Math.ceil(requestedTotalLevel / MAX_CLASS_LEVEL))
+        : 1;
+
+    const slugs = classOverrideEntries
+        ? classOverrideEntries.map(entry => entry.slug)
+        : rollClassSlugs(catalog, rng, minClasses);
 
     let totalLevel;
     if (explicitLevelsGiven) {
@@ -336,11 +373,24 @@ export function buildUatPlan({seed, options = {}, catalog, monsterIndex, minions
     } else if (options.level !== undefined) {
         totalLevel = Number(options.level);
     } else {
-        totalLevel = rng.int(1, 20);
+        // Le tirage ne propose jamais plus que ce que les classes tirées peuvent porter :
+        // mono-classe, le héros plafonne donc au niveau MAX_CLASS_LEVEL.
+        totalLevel = rng.int(1, Math.min(20, slugs.length * MAX_CLASS_LEVEL));
     }
     assertValidLevel(totalLevel);
 
     const effectiveSlugs = totalLevel >= slugs.length ? slugs : slugs.slice(0, 1);
+
+    if (!explicitLevelsGiven) {
+        const capacity = effectiveSlugs.length * MAX_CLASS_LEVEL;
+        if (totalLevel > capacity) {
+            throw new Error(
+                `Niveau total ${totalLevel} impossible avec ${effectiveSlugs.length} classe(s) `
+                + `(${effectiveSlugs.join(", ")}) : aucune classe ne peut dépasser le niveau ${MAX_CLASS_LEVEL}. `
+                + `Baissez --level à ${capacity} au plus, ou donnez davantage de classes à --class.`
+            );
+        }
+    }
 
     const classEntries = explicitLevelsGiven
         ? classOverrideEntries.map(({slug, level}) => ({slug, level}))

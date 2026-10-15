@@ -24,6 +24,15 @@
 export const NEUTRAL_CLASS = "neutral";
 
 /**
+ * Niveau maximal atteignable par une classe FQ. La progression d'une classe est
+ * refusée au-delà : au-dessus de ce plafond, un personnage ne monte plus qu'en
+ * prenant une autre classe. Déclaré ici plutôt que dans `constants.js` pour que
+ * les scripts Node hors Foundry (générateur de mondes UAT) puissent le lire.
+ * @type {number}
+ */
+export const MAX_CLASS_LEVEL = 12;
+
+/**
  * Les classes fournies par le moteur : identifiant vers clé de localisation.
  * Table écrite EN TOUTES LETTRES, comme `ABILITY_CHOICE` (`abilities.js`) : une
  * clé construite par concaténation serait introuvable à la recherche dans le

@@ -1,11 +1,16 @@
 import {readdir, readFile} from "node:fs/promises";
 import path from "node:path";
+import {MAX_CLASS_LEVEL} from "../../../src/domain/classes.js";
 
 /**
  * Tirage du build de héros (classe(s), niveau(x), picks de stats, PV,
  * améliorations de caractéristiques) — module Node pur, sans dépendance à
  * Foundry. Toutes les fonctions lisent les sources de packs `_source`
  * committées : aucune ouverture de compendium n'est nécessaire (D-01, D-03).
+ *
+ * Le plafond de niveau par classe est lu dans `src/domain/classes.js`, source
+ * unique partagée avec le moteur : ce module-là ne touche ni à `foundry` ni à
+ * `game` et s'importe donc depuis Node (contrairement à `constants.js`).
  */
 
 const MODULE_ID = "fq-card-engine";
@@ -147,15 +152,16 @@ export async function loadClassCatalog(repoRoot = process.cwd()) {
 
 /**
  * Répartit `totalLevel` sur les classes demandées, chacune recevant au moins 1
- * niveau et la somme valant exactement `totalLevel`. La première classe de
- * `slugs` reste la classe principale dans la liste rendue (l'appelant en
- * contrôle l'ordre).
+ * niveau, aucune ne dépassant `MAX_CLASS_LEVEL`, et la somme valant exactement
+ * `totalLevel`. La première classe de `slugs` reste la classe principale dans
+ * la liste rendue (l'appelant en contrôle l'ordre).
  *
  * @param {string[]} slugs      - Les slugs de classe demandés (mono ou multi-classe).
- * @param {number} totalLevel   - Le niveau total du héros.
+ * @param {number} totalLevel   - Le niveau total du héros, au plus `slugs.length * MAX_CLASS_LEVEL`.
  * @param {{int: function(number, number): number}} rng - Le RNG déterministe.
  *
  * @returns {Array<{slug: string, level: number}>} La répartition, dans l'ordre de `slugs`.
+ * @throws {Error} Si `totalLevel` sort de l'intervalle que les classes peuvent porter.
  */
 export function splitClassLevels(slugs, totalLevel, rng) {
     if (totalLevel < slugs.length) {
@@ -164,10 +170,23 @@ export function splitClassLevels(slugs, totalLevel, rng) {
         );
     }
 
+    const capacity = slugs.length * MAX_CLASS_LEVEL;
+    if (totalLevel > capacity) {
+        throw new Error(
+            `totalLevel (${totalLevel}) dépasse ce que ${slugs.length} classe(s) peuvent porter `
+            + `(plafond ${MAX_CLASS_LEVEL} par classe, soit ${capacity}).`
+        );
+    }
+
     const levels = slugs.map(() => 1);
     let remaining = totalLevel - slugs.length;
     while (remaining > 0) {
-        const index = rng.int(0, slugs.length - 1);
+        // Seules les classes encore sous le plafond peuvent recevoir le niveau suivant.
+        // Tant qu'aucune n'est saturée, `available` liste tous les index dans l'ordre :
+        // le tirage est alors identique à un tirage direct sur `slugs`, ce qui garde
+        // les répartitions sans saturation strictement inchangées.
+        const available = levels.flatMap((level, index) => (level < MAX_CLASS_LEVEL ? [index] : []));
+        const index = available[rng.int(0, available.length - 1)];
         levels[index] += 1;
         remaining -= 1;
     }

@@ -73,14 +73,6 @@ export const PREPARED_COLOR = "#5AAAE6";
 export const DEFAULT_MAX_ZEAL = 8;
 
 /**
- * Niveau maximal atteignable par une classe FQ. La progression d'une classe est
- * refusée au-delà : au-dessus de ce plafond, un personnage ne monte plus qu'en
- * prenant une autre classe.
- * @type {number}
- */
-export const MAX_CLASS_LEVEL = 12;
-
-/**
  * Regroupe des constantes de couleurs/labels et des accesseurs pratiques vers
  * le personnage de l'utilisateur courant, ses cibles et l'état de combat.
  * Toutes les méthodes sont statiques : la classe sert de namespace.

@@ -1,4 +1,5 @@
-import Constants, {MAX_CLASS_LEVEL, isGeneratedCard} from "../constants.js";
+import Constants, {isGeneratedCard} from "../constants.js";
+import {MAX_CLASS_LEVEL} from "../classes.js";
 import {sampleItems} from "../../core/utils/random.utils.js";
 import PackUtils from "../../core/utils/pack.utils.js";
 

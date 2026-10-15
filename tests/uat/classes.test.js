@@ -8,6 +8,7 @@ import {
     splitClassLevels
 } from "../script/uat/classes.mjs";
 import {createRng} from "../script/uat/rng.mjs";
+import {MAX_CLASS_LEVEL} from "../../src/domain/classes.js";
 
 /**
  * Couvre le tirage du build de héros (UAT-04) : picks de stats fidèles aux
@@ -187,6 +188,23 @@ describe("splitClassLevels", () => {
     it("lève une erreur explicite si le niveau total est inférieur au nombre de classes", () => {
         const rng = createRng(4242);
         expect(() => splitClassLevels(twoSlugs, 1, rng)).toThrow();
+    });
+
+    it("plafonne chaque classe à MAX_CLASS_LEVEL, même quand une classe sature", () => {
+        const rng = createRng(4242);
+        const total = 2 * MAX_CLASS_LEVEL - 1;
+        const result = splitClassLevels(twoSlugs, total, rng);
+
+        expect(result.reduce((sum, entry) => sum + entry.level, 0)).toBe(total);
+        for (const entry of result) {
+            expect(entry.level).toBeLessThanOrEqual(MAX_CLASS_LEVEL);
+        }
+    });
+
+    it("lève une erreur explicite si le niveau total dépasse ce que les classes peuvent porter", () => {
+        const rng = createRng(4242);
+        expect(() => splitClassLevels(twoSlugs.slice(0, 1), MAX_CLASS_LEVEL + 1, rng))
+            .toThrow(/plafond/);
     });
 });
 
