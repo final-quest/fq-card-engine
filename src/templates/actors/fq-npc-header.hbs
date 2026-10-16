@@ -307,8 +307,7 @@
                     <li class="creature-size">
                         {{#if editable}}
                             <select class="unselect" name="system.traits.size">
-                                {{ selectOptions CONFIG.actorSizes selected=source.traits.size labelAttr="label"
-                                                 valueAttr="label" }}
+                                {{ selectOptions CONFIG.actorSizes selected=source.traits.size labelAttr="label" }}
                             </select>
                         {{else}}
                             <span>{{ lookup (lookup CONFIG.actorSizes system.traits.size) "label" }}</span>
