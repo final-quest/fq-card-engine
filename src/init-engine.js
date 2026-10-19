@@ -11,7 +11,6 @@ import CardCondition from "./domain/engine/shared/card-condition.js";
 import ZoneWall from "./domain/engine/shared/zone-wall.js";
 import {socket} from "./hook/integration/socketlib.hook.js";
 import {fqClassIds, hasFqClass, registerFqClass, unregisterFqClass} from "./domain/classes.js";
-import {pushGlobalVolumes} from "./core/utils/audio.utils.js";
 
 CONFIG.FqCardEngine = {
     options: {
@@ -37,15 +36,6 @@ window.FqCardEngineModule = {
      */
     walls: {
         fromZone: (cardContent, style) => ZoneWall.requestFromZone(socket, cardContent, style)
-    },
-
-    /**
-     * Entrée macro MJ : `FqCardEngineModule.audio.pushVolumes()` aligne les
-     * volumes Musique / Environnement / Interface de tous les clients connectés
-     * sur ceux du MJ.
-     */
-    audio: {
-        pushVolumes: () => pushGlobalVolumes(socket)
     },
     handBarList: new Array(),
 
