@@ -10,6 +10,11 @@
  * immunisée au froid, une cible prend ×¼ d'un sort de feu et de froid ;
  * vulnérable au feu et résistante au froid, elle prend ×1.
  *
+ * La règle d'or FQ : toute réduction s'arrondit AU SUPÉRIEUR. 5 dégâts réduits
+ * de moitié — par l'esquive, la classe d'armure, une sauvegarde ou une
+ * résistance — en font 3, jamais 2. Le seul arrondi de la chaîne est ici, une
+ * fois le cran de l'échelle et les coefficients réunis.
+ *
  * Savoir si un élément est résisté reste l'affaire de dnd5e :
  * `Actor5e#calculateDamage` connaît les traits `dr`/`di`/`dv`, les traits « à
  * tous les dégâts », leurs contournements (dégâts magiques, argentés…), et
@@ -67,14 +72,15 @@ export default class DamageTraits {
      * @param {string[]} [options.properties] - Leurs propriétés (magique, argenté…) ; aucune par défaut.
      *
      * @returns {{value: number, traits: Array<{type: string, kinds: string[], factor: number}>}}
-     *          Les dégâts à retirer, et les éléments sur lesquels un trait a joué,
-     *          `kinds` parmi « immune », « resist », « vulnerable ».
+     *          Les dégâts à retirer, arrondis au supérieur, et les éléments sur
+     *          lesquels un trait a joué, `kinds` parmi « immune », « resist »,
+     *          « vulnerable ».
      */
     static apply(actor, amount, multiplier = 1, {types = [], properties = []} = {}) {
         const traits = DamageTraits.#traitsOf(actor, types, properties);
         const factor = traits.reduce((product, trait) => product * trait.factor, 1);
         return {
-            value: Math.trunc(amount * multiplier * factor),
+            value: Math.ceil(amount * multiplier * factor),
             traits: traits.filter(trait => trait.kinds.length)
         };
     }

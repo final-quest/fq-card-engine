@@ -195,11 +195,20 @@ describe("Damage — les deux défenses ensemble", () => {
         expect(result[0].value).toBe(0);
     });
 
-    it("les demi-dégâts sont arrondis à l'inférieur", async () => {
+    it("les demi-dégâts sont arrondis au supérieur", async () => {
         targeting(makeTarget("t1", "Gobelin", 0, {ac: 15}));
         stubRolls([{total: 1}]);
 
         const result = await Damage.addCriticalEvasionToDamage(CASTER, 7, ATTACK_CHOICE);
+
+        expect(result[0].value).toBe(4);
+    });
+
+    it("la règle d'or : 5 dégâts réduits de moitié par la classe d'armure en font 3", async () => {
+        targeting(makeTarget("t1", "Gobelin", 0, {ac: 15}));
+        stubRolls([{total: 1}]);
+
+        const result = await Damage.addCriticalEvasionToDamage(CASTER, 5, ATTACK_CHOICE);
 
         expect(result[0].value).toBe(3);
     });

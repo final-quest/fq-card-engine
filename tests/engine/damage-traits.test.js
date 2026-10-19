@@ -124,8 +124,8 @@ describe("DamageTraits.apply — un seul élément", () => {
             .toEqual({value: 12, traits: [{type: "fire", kinds: ["resist", "vulnerable"], factor: 1}]});
     });
 
-    it("le cran FQ s'applique avec : esquive (½) et résistance (½) font ×¼, tronqué", () => {
-        expect(DamageTraits.apply(actorWith({dr: ["fire"]}), 13, 0.5, {types: ["fire"]}).value).toBe(3);
+    it("le cran FQ s'applique avec : esquive (½) et résistance (½) font ×¼, arrondi au supérieur", () => {
+        expect(DamageTraits.apply(actorWith({dr: ["fire"]}), 13, 0.5, {types: ["fire"]}).value).toBe(4);
     });
 });
 
@@ -174,8 +174,8 @@ describe("DamageTraits.apply — plusieurs éléments : les coefficients se mult
 
 describe("DamageTraits.apply — sans dnd5e", () => {
 
-    it("un acteur sans calculateDamage : le seul cran FQ, tronqué", () => {
-        expect(DamageTraits.apply({}, 5, 0.5, FROSTFIRE)).toEqual({value: 2, traits: []});
+    it("un acteur sans calculateDamage : le seul cran FQ, arrondi au supérieur", () => {
+        expect(DamageTraits.apply({}, 5, 0.5, FROSTFIRE)).toEqual({value: 3, traits: []});
     });
 
     it("sans acteur : pareil", () => {

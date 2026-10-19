@@ -199,7 +199,7 @@ export default class Damage {
      * combien de défenses elle réussit — son esquive, et la protection que lui
      * donne sa classe d'armure ou sa sauvegarde quand la carte demande un jet
      * pour toucher. Construit le tableau des dégâts par cible en appliquant
-     * {@link Damage.damageMultiplier}, arrondi à l'inférieur.
+     * {@link Damage.damageMultiplier}, arrondi au supérieur.
      *
      * Aucune défense n'est opposée en cas d'auto-ciblage : la cible est alors
      * absente du résultat, comme avant l'introduction du jet pour toucher.

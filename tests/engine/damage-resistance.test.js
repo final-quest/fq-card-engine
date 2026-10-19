@@ -116,7 +116,7 @@ describe("Damage — une carte à deux éléments", () => {
 
 describe("Damage — l'échelle FQ et les traits se combinent", () => {
 
-    it("esquive (½) puis résistance (½) : 13 → 3", async () => {
+    it("esquive (½) puis résistance (½) : 13 → 4", async () => {
         targeting(foe("diablotin", {dr: ["fire"]}, 20));
         stubRolls([{total: 13}, {total: 10}]);
 
@@ -124,7 +124,7 @@ describe("Damage — l'échelle FQ et les traits se combinent", () => {
             {damage: "(2d6+3)[fire]", bonusCrit: -999, bonusEva: 0, minReach: 1, maxReach: 1});
 
         expect(result[0].evasion).toBe(true);
-        expect(result[0].value).toBe(3);
+        expect(result[0].value).toBe(4);
     });
 
     it("sans dnd5e (acteur sans calculateDamage) : exactement le calcul d'avant", async () => {
@@ -239,10 +239,10 @@ describe("Damage.damageOverTime", () => {
         expect(await Damage.damageOverTime(bearer("+1[poison]+1[poison]+2[fire]", {di: ["poison"]}))).toBe(2);
     });
 
-    it("un démon résistant au feu : ×½ tronqué", async () => {
+    it("un démon résistant au feu : ×½ arrondi au supérieur", async () => {
         stubRolls([{total: 3}]);
 
-        expect(await Damage.damageOverTime(bearer("+3[fire]", {dr: ["fire"]}))).toBe(1);
+        expect(await Damage.damageOverTime(bearer("+3[fire]", {dr: ["fire"]}))).toBe(2);
     });
 
     it("les dégâts par tour n'ont aucune propriété : une résistance physique joue", async () => {
