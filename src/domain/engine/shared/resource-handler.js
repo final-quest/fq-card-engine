@@ -185,7 +185,9 @@ export default class ResourceHandler {
     }
 
     /**
-     * Publie dans le chat un message d'avertissement stylisé, attribué à l'acteur.
+     * Publie un message d'avertissement stylisé attribué à l'acteur : au chat pour
+     * la table, et en notification Foundry pour le joueur dont le geste vient d'être
+     * refusé — c'est le seul canal que les calques du module ne recouvrent pas.
      *
      * @param {string} message - Le message d'avertissement (déjà localisé).
      * @param {object} actor   - L'acteur à qui attribuer le message.
@@ -193,7 +195,7 @@ export default class ResourceHandler {
      * @returns {void}
      */
     static createUserWarningMessage(message, actor) {
-        createWarning(message, {actor, prependActorName: true});
+        createWarning(message, {actor, prependActorName: true, notify: true});
     }
 
     /**

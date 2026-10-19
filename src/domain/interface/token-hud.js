@@ -143,6 +143,90 @@ export default class TokenHud {
     }
 
     /**
+     * Indique si le jeton appartient à autrui : le MJ n'est jamais concerné, et
+     * un joueur l'est sur tout jeton dont il ne possède pas l'acteur (personnage
+     * d'un autre joueur, créature du MJ, jeton sans acteur).
+     *
+     * @param {object} token - Le jeton considéré.
+     *
+     * @returns {boolean} True si l'utilisateur courant ne possède pas ce jeton.
+     */
+    static isForeignToken(token) {
+        return !game.user?.isGM && token?.actor?.isOwner !== true;
+    }
+
+    /**
+     * Ne conserve dans les colonnes du HUD que les contrôles désignés : tout
+     * autre enfant direct d'une colonne — bouton natif, palette, barre de
+     * ressource — est retiré du DOM.
+     *
+     * @param {HTMLElement} html     - La racine du HUD rendu.
+     * @param {string}      selector - Le sélecteur des contrôles conservés.
+     *
+     * @returns {void}
+     */
+    static keepOnlyControls(html, selector) {
+        html.querySelectorAll(".col > *").forEach(el => {
+            if (!el.matches(selector)) el.remove();
+        });
+    }
+
+    /**
+     * Enveloppe libWrapper de `Token#_canHUD` : le noyau réserve le HUD du jeton
+     * au MJ et aux propriétaires, ce qui prive le joueur de tout ciblage au clic
+     * droit sur les jetons d'autrui. Le HUD y est donc rouvert, réduit au seul
+     * bouton de ciblage par le hook `renderTokenHUD`.
+     *
+     * Appelée par libWrapper avec `this` lié au jeton.
+     *
+     * @param {Function} wrapped - Le prédicat d'origine.
+     * @param {object}   user    - L'utilisateur qui clique (toujours l'utilisateur courant).
+     * @param {object}   [event] - L'événement pointeur, quand le clic vient du canvas.
+     *
+     * @returns {boolean} True si le HUD peut s'ouvrir sur ce jeton.
+     */
+    static canOpenHudOnForeignToken(wrapped, user, event) {
+        if (wrapped(user, event)) {
+            return true;
+        }
+        // Le natif ne consulte `user` que pour la propriété : rejoué avec un MJ,
+        // il ne tranche plus que ses AUTRES conditions (calque actif, pose de
+        // région, glissement en cours, règle de mesure), qui n'ont donc pas à
+        // être redites ici. Un jeton que le joueur ne voit pas ne reçoit de toute
+        // façon aucun clic.
+        const gm = game.users?.find(u => u.isGM);
+        return gm ? wrapped(gm, event) : false;
+    }
+
+    /**
+     * Enveloppe libWrapper de `Token#_onClickRight` : sur un jeton d'autrui, le
+     * HUD s'ouvre (ou se referme) sans passer par `control()`, qui libérerait la
+     * sélection du joueur sur SON jeton au profit d'un jeton qu'il ne peut de
+     * toute façon pas contrôler.
+     *
+     * Appelée par libWrapper avec `this` lié au jeton.
+     *
+     * @param {Function} wrapped - Le gestionnaire d'origine.
+     * @param {object}   event   - L'événement pointeur du clic droit.
+     *
+     * @returns {*} Le résultat du gestionnaire d'origine, ou undefined sur un jeton d'autrui.
+     */
+    static openHudOnForeignToken(wrapped, event) {
+        const hud = this.layer?.hud;
+        if (!hud || !TokenHud.isForeignToken(this)) {
+            return wrapped(event);
+        }
+        if (this.hasActiveHUD) {
+            hud.close();
+        } else {
+            hud.bind(this);
+        }
+        if (!this._propagateRightClick(event)) {
+            event.stopPropagation();
+        }
+    }
+
+    /**
      * Ajoute au HUD du token deux boutons « infliger des dégâts » : l'un déclenche
      * l'usage de la première arme de mêlée équipée de l'acteur, l'autre celui de la
      * première arme à distance équipée, après validation de l'usage d'un sort dans

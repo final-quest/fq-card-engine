@@ -2,15 +2,17 @@ import Constants from "../domain/constants.js";
 import TokenHud from "../domain/interface/token-hud.js";
 
 Hooks.on("renderTokenHUD", (hud, html, _data) => {
-    // Les contrôles natifs du HUD ne sont retirés aux joueurs que lorsque la
-    // limitation de leurs droits est activée. On leur conserve toutefois le
-    // ciblage et le choix de l'action de mouvement (bouton + palette,
-    // tous deux porteurs de data-palette="movementActions").
-    if (Constants.isPlayerRightsLimited) {
-        const keptControls = "[data-action='target'], [data-palette='movementActions']";
-        html.querySelectorAll(".col > *").forEach(el => {
-            if (!el.matches(keptControls)) el.remove();
-        });
+    // Sur un jeton d'autrui, le HUD n'est rouvert au joueur que pour le ciblage
+    // (cf. `TokenHud.canOpenHudOnForeignToken`) : lui seul est conservé, quel que
+    // soit l'état de la limitation des droits.
+    if (TokenHud.isForeignToken(hud.object)) {
+        TokenHud.keepOnlyControls(html, "[data-action='target']");
+    } else if (Constants.isPlayerRightsLimited) {
+        // Sur ses propres jetons, les contrôles natifs du HUD ne sont retirés au
+        // joueur que lorsque la limitation de ses droits est activée. On lui
+        // conserve toutefois le ciblage et le choix de l'action de mouvement
+        // (bouton + palette, tous deux porteurs de data-palette="movementActions").
+        TokenHud.keepOnlyControls(html, "[data-action='target'], [data-palette='movementActions']");
     }
 
     const colLeft = html.querySelector(".col.left");

@@ -8,7 +8,11 @@
 
 .fq-result-window {
     position: fixed;
-    right: calc(var(--sidebar-width, 300px) + 18px);
+    /* La barre latérale est mise à l'échelle de l'interface (`#ui-right` porte
+       `scale(--ui-scale)` depuis son coin haut-droit) alors que ce calque, posé sur
+       `body`, ne l'est pas : sans ce facteur, une échelle supérieure à 100 % fait
+       empiéter le panneau sur la colonne du chat, où s'affichent les refus de jeu. */
+    right: calc(var(--sidebar-width, 300px) * var(--ui-scale, 1) + 18px);
     bottom: 112px;
     z-index: 70;
     width: 470px;

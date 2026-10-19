@@ -113,7 +113,7 @@ export default class DiscardCost {
      */
     static #warnHandTooShort(count) {
         createWarning(game.i18n.format("FQCARDENGINE.WarningMsgNotEnoughCardsToDiscard", {count}),
-            {actor: Constants.actorCurrent, prependActorName: true});
+            {actor: Constants.actorCurrent, prependActorName: true, notify: true});
     }
 
     /**

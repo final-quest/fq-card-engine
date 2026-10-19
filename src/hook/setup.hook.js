@@ -9,6 +9,7 @@ import {restrictCardsConfigDrop} from "../domain/interface/window/drag-drop.js";
 import DisplayCard from "../domain/interface/card-svg/display-card.js";
 import ResultWindow from "../domain/interface/window/result-window.js";
 import {registerResultPresenter} from "../domain/engine/roll/result-presenter.js";
+import TokenHud from "../domain/interface/token-hud.js";
 
 Hooks.on("setup", function () {
     // La couche interface s’annonce au moteur : celui-ci attend la fin de
@@ -76,6 +77,15 @@ Hooks.on("setup", function () {
     // main, défausse et FqCardsSheet héritent de ce _onDrop) ; règle partagée avec
     // la barre de main (cf. `restrictCardsConfigDrop`).
     libWrapper.register(FqCardEngineModule.moduleName, "foundry.applications.sheets.CardsConfig.prototype._onDrop", restrictCardsConfigDrop, "MIXED");
+
+    // Le noyau réserve le HUD du jeton au MJ et à ses propriétaires : un joueur
+    // n'y trouve donc aucun bouton de ciblage sur les jetons d'autrui, pourtant
+    // les cibles de ses cartes. Ces deux enveloppes rouvrent le HUD au clic droit
+    // sur ces jetons, sans toucher à la sélection du joueur ; `renderTokenHUD` le
+    // réduit alors au seul ciblage. Le jeton de dnd5e (`Token5e`) hérite de ces
+    // deux méthodes sans les redéfinir : envelopper la classe de base suffit.
+    libWrapper.register(FqCardEngineModule.moduleName, "foundry.canvas.placeables.Token.prototype._canHUD", TokenHud.canOpenHudOnForeignToken, "MIXED");
+    libWrapper.register(FqCardEngineModule.moduleName, "foundry.canvas.placeables.Token.prototype._onClickRight", TokenHud.openHudOnForeignToken, "MIXED");
 
     if (game.settings.get(FqCardEngineModule.moduleName, "PlayerLimitCardsRight")) {
         CONFIG.FqCardEngine.options.playerLimitCardsRight = true;

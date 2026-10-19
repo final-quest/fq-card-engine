@@ -86,9 +86,12 @@ describe("render-token", () => {
             game.user.character = undefined;
             CONFIG.FqCardEngine.options.playerLimitCardsRight = true;
 
-            hook({object: {}}, container, {});
+            hook({object: {actor: {isOwner: true}}}, container, {});
 
-            expect(colLeft.children.length).toBe(0);
+            // Contrôles natifs de la colonne gauche retirés ; n'y restent que les
+            // deux boutons de dégâts ajoutés sur un jeton possédé.
+            expect(colLeft.querySelector("[data-action='sort'], .attribute.elevation")).toBeNull();
+            expect(colLeft.children.length).toBe(2);
             expect(colRight.querySelector("[data-action='target']")).not.toBeNull();
             // Bouton d'ouverture + palette de l'action de mouvement conservés.
             expect(colRight.querySelectorAll("[data-palette='movementActions']").length).toBe(2);
@@ -105,10 +108,45 @@ describe("render-token", () => {
             game.user.character = undefined;
             CONFIG.FqCardEngine.options.playerLimitCardsRight = false;
 
-            hook({object: {}}, container, {});
+            hook({object: {actor: {isOwner: true}}}, container, {});
 
             expect(colRight.innerHTML).toBe("<span>existing-right</span>");
             expect(colLeft.innerHTML).toContain("existing-left");
+        });
+
+        it("ne conserve que le ciblage sur un jeton d'autrui, limitation des droits active ou non", () => {
+            const hook = getHook("renderTokenHUD");
+            game.user.isGM = false;
+            game.user.character = undefined;
+
+            for (const limited of [true, false]) {
+                const {container, colLeft, colRight} = buildHudHtml();
+                colLeft.innerHTML = "<div class='attribute elevation'></div><button data-action='sort'></button>";
+                colRight.innerHTML =
+                    "<button data-action='togglePalette' data-palette='movementActions'></button>" +
+                    "<div class='palette palette-list' data-palette='movementActions'></div>" +
+                    "<button data-action='target'></button>" +
+                    "<button data-action='combat'></button>";
+                CONFIG.FqCardEngine.options.playerLimitCardsRight = limited;
+
+                hook({object: {actor: {isOwner: false}}}, container, {});
+
+                expect(colLeft.children.length).toBe(0);
+                expect(colRight.children.length).toBe(1);
+                expect(colRight.querySelector("[data-action='target']")).not.toBeNull();
+            }
+        });
+
+        it("laisse intact le HUD du MJ sur un jeton qu'il ne possède pas", () => {
+            const hook = getHook("renderTokenHUD");
+            const {container, colRight} = buildHudHtml();
+            colRight.innerHTML = "<button data-action='combat'></button>";
+            game.user.isGM = true;
+            CONFIG.FqCardEngine.options.playerLimitCardsRight = true;
+
+            hook({object: {actor: {isOwner: false}}}, container, {});
+
+            expect(colRight.querySelector("[data-action='combat']")).not.toBeNull();
         });
 
         it("ajoute les boutons de dégâts sur un token possédé même sans personnage assigné", () => {
@@ -205,6 +243,98 @@ describe("render-token", () => {
             expect(game.user.character.update).toHaveBeenCalledWith({
                 "system.fq.minions.sacrificedMinion": TokenHud.getSacrificedScore("Créature hors table")
             });
+        });
+    });
+
+    describe("TokenHud.canOpenHudOnForeignToken (enveloppe de Token#_canHUD)", () => {
+
+        it("laisse passer le verdict du noyau quand il accorde déjà le HUD", () => {
+            const wrapped = vi.fn(() => true);
+
+            expect(TokenHud.canOpenHudOnForeignToken.call({}, wrapped, game.user, {type: "pointerdown"})).toBe(true);
+            expect(wrapped).toHaveBeenCalledTimes(1);
+        });
+
+        it("rejoue le prédicat natif avec un MJ pour ne rouvrir que le cas de la propriété", () => {
+            game.users.find = vi.fn(fn => [{isGM: true}].find(fn));
+            // Natif refusé pour l'utilisateur (non propriétaire), accordé pour un MJ :
+            // toutes les autres conditions du noyau sont donc réunies.
+            const wrapped = vi.fn(user => user.isGM === true);
+
+            expect(TokenHud.canOpenHudOnForeignToken.call({}, wrapped, game.user, undefined)).toBe(true);
+        });
+
+        it("refuse le HUD quand le noyau le refuse même à un MJ (calque inactif, glissement, règle de mesure)", () => {
+            game.users.find = vi.fn(fn => [{isGM: true}].find(fn));
+            const wrapped = vi.fn(() => false);
+
+            expect(TokenHud.canOpenHudOnForeignToken.call({}, wrapped, game.user, undefined)).toBe(false);
+        });
+
+        it("retombe sur le refus du noyau quand aucun utilisateur MJ n'existe", () => {
+            game.users.find = vi.fn(() => undefined);
+            const wrapped = vi.fn(() => false);
+
+            expect(TokenHud.canOpenHudOnForeignToken.call({}, wrapped, game.user, undefined)).toBe(false);
+            expect(wrapped).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe("TokenHud.openHudOnForeignToken (enveloppe de Token#_onClickRight)", () => {
+
+        function foreignToken({isOwner = false, activeHud = false} = {}) {
+            const hud = {bind: vi.fn(), close: vi.fn()};
+            return {
+                hud,
+                token: {
+                    actor: {isOwner},
+                    layer: {hud},
+                    hasActiveHUD: activeHud,
+                    control: vi.fn(),
+                    _propagateRightClick: vi.fn(() => false)
+                }
+            };
+        }
+
+        it("ouvre le HUD d'un jeton d'autrui sans toucher à la sélection du joueur", () => {
+            game.user.isGM = false;
+            const {hud, token} = foreignToken();
+            const wrapped = vi.fn();
+            const event = {stopPropagation: vi.fn()};
+
+            TokenHud.openHudOnForeignToken.call(token, wrapped, event);
+
+            expect(hud.bind).toHaveBeenCalledWith(token);
+            expect(token.control).not.toHaveBeenCalled();
+            expect(wrapped).not.toHaveBeenCalled();
+            expect(event.stopPropagation).toHaveBeenCalled();
+        });
+
+        it("referme le HUD déjà ouvert sur le même jeton d'autrui", () => {
+            game.user.isGM = false;
+            const {hud, token} = foreignToken({activeHud: true});
+
+            TokenHud.openHudOnForeignToken.call(token, vi.fn(), {stopPropagation: vi.fn()});
+
+            expect(hud.close).toHaveBeenCalled();
+            expect(hud.bind).not.toHaveBeenCalled();
+        });
+
+        it("délègue au gestionnaire natif sur un jeton possédé comme pour le MJ", () => {
+            const {hud, token} = foreignToken({isOwner: true});
+            const event = {stopPropagation: vi.fn()};
+
+            game.user.isGM = false;
+            const wrappedOwner = vi.fn();
+            TokenHud.openHudOnForeignToken.call(token, wrappedOwner, event);
+
+            game.user.isGM = true;
+            const wrappedGM = vi.fn();
+            TokenHud.openHudOnForeignToken.call({...token, actor: {isOwner: false}}, wrappedGM, event);
+
+            expect(wrappedOwner).toHaveBeenCalledWith(event);
+            expect(wrappedGM).toHaveBeenCalledWith(event);
+            expect(hud.bind).not.toHaveBeenCalled();
         });
     });
 

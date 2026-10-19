@@ -1106,16 +1106,18 @@ export default class CardEffect {
             conditions.failures.forEach(failure => {
                 if (failure.thrown) {
                     console.error(failure.thrown);
-                    createWarning(game.i18n.localize("FQCARDENGINE.WarningMsgErrorReadingCardSpecialCondition"), {actor: Constants.actorCurrent, color: ERROR_COLOR});
+                    createWarning(game.i18n.localize("FQCARDENGINE.WarningMsgErrorReadingCardSpecialCondition"),
+                        {actor: Constants.actorCurrent, color: ERROR_COLOR, notify: true});
                     return;
                 }
                 const cardMessages = CardEffect.translateMessages(failure.errorMessages);
                 if (cardMessages?.length) {
                     cardMessages.forEach(warningMsg => {
-                        createWarning(warningMsg, {actor: Constants.actorCurrent});
+                        createWarning(warningMsg, {actor: Constants.actorCurrent, notify: true});
                     });
                 } else {
-                    createWarning(game.i18n.localize("FQCARDENGINE.WarningMsgCardConditionNotMet"), {actor: Constants.actorCurrent});
+                    createWarning(game.i18n.localize("FQCARDENGINE.WarningMsgCardConditionNotMet"),
+                        {actor: Constants.actorCurrent, notify: true});
                 }
             });
             return false;
@@ -1123,14 +1125,16 @@ export default class CardEffect {
 
         if (game.combat != null) {
             if (CardFqSystem.isPlayedThisRound(cardContent)) {
-                createWarning(game.i18n.localize("FQCARDENGINE.WarningMsgCardAlreadyPlayedThisTurn"), {actor: Constants.actorCurrent});
+                createWarning(game.i18n.localize("FQCARDENGINE.WarningMsgCardAlreadyPlayedThisTurn"),
+                    {actor: Constants.actorCurrent, notify: true});
                 return false;
             }
             // S'agit t-il d'un sort réactive et peut on la jouer?
             if (cardContent && !cardContent.reactive && !ResourceHandler.validateUseSpellInTurn(Constants.actorCurrent)) {
                 return false;
             } else if (CardCondition.reactiveBlockedByOwnTurn(cardContent)) {
-                createWarning(game.i18n.localize("FQCARDENGINE.WarningMsgPlayReactiveCard"), {actor: Constants.actorCurrent});
+                createWarning(game.i18n.localize("FQCARDENGINE.WarningMsgPlayReactiveCard"),
+                    {actor: Constants.actorCurrent, notify: true});
                 return false;
             }
         }
