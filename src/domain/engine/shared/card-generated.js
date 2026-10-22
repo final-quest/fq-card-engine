@@ -13,12 +13,52 @@ export default class CardGenerated {
      * @returns {Promise<Card|null>} La carte trouvée, ou null si la référence est irrésoluble.
      */
     static async resolveCompendiumCard(reference) {
-        const parts = reference.split(".").map(part => part.trim());
-        const byFullId = parts.length > 3 ? game.packs.get(parts.slice(0, 2).join(".")) : null;
-        const pack = byFullId ?? (parts.length > 2 ? game.packs.find(p => p.metadata?.name === parts[0]) : null);
-        const deckIndex = byFullId ? 2 : 1;
-        const deck = pack ? (await pack.getDocuments()).find(doc => doc.name === parts[deckIndex]) : null;
-        return deck?.cards.find(c => c.name === parts.slice(deckIndex + 1).join(".")) ?? null;
+        const [card] = await CardGenerated.resolveCompendiumCards([reference]);
+        return card ?? null;
+    }
+
+    /**
+     * Résout une liste de références `compendium.deck.carte` en UNE lecture par
+     * compendium.
+     *
+     * Résolue seule, chaque référence relit le compendium ENTIER :
+     * `pack.getDocuments()` ne filtre rien et rend tous les decks du paquet, avec
+     * toutes leurs cartes. Un encart qui propose des cartes de dix niveaux en
+     * résout une quarantaine, et ces résolutions partent toutes avant que la
+     * première ne revienne — aucune mise en cache du paquet ne peut les absorber,
+     * puisqu'elles ratent toutes le cache en même temps. La lecture est donc
+     * partagée par compendium, et c'est la PROMESSE qui est mémorisée, pas son
+     * résultat : des résolutions concurrentes attendent ainsi la même lecture au
+     * lieu d'en lancer chacune une.
+     *
+     * Le partage ne vaut que pour l'appel : rien n'est gardé d'un lot à l'autre,
+     * un compendium modifié en cours de partie est donc relu au lot suivant.
+     *
+     * @param {string[]} references - Les références à résoudre.
+     *
+     * @returns {Promise<(Card|null)[]>} Les cartes trouvées, dans l'ordre des références (null pour une référence irrésoluble).
+     */
+    static async resolveCompendiumCards(references) {
+        // Clé = le compendium lui-même : deux références au même paquet le
+        // désignent par le même objet, quelle que soit la façon de l'écrire.
+        const loading = new Map();
+        const documentsOf = pack => {
+            if (!loading.has(pack)) {
+                loading.set(pack, pack.getDocuments());
+            }
+            return loading.get(pack);
+        };
+        return Promise.all((references ?? []).map(async reference => {
+            const parts = reference.split(".").map(part => part.trim());
+            const byFullId = parts.length > 3 ? game.packs.get(parts.slice(0, 2).join(".")) : null;
+            const pack = byFullId ?? (parts.length > 2 ? game.packs.find(p => p.metadata?.name === parts[0]) : null);
+            if (!pack) {
+                return null;
+            }
+            const deckIndex = byFullId ? 2 : 1;
+            const deck = (await documentsOf(pack)).find(doc => doc.name === parts[deckIndex]);
+            return deck?.cards.find(c => c.name === parts.slice(deckIndex + 1).join(".")) ?? null;
+        }));
     }
 
     /**

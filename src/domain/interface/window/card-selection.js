@@ -29,11 +29,9 @@ export default class CardSelection {
      * @returns {Promise<{cards: Card[], missing: string[]}>} Les cartes résolues et les références manquantes.
      */
     static async resolveCardPool(references) {
-        // Résolutions indépendantes en lecture seule : en parallèle, l'ordre
-        // des résultats restant celui des références.
-        const resolved = await Promise.all(
-            (references ?? []).map(reference => CardGenerated.resolveCompendiumCard(reference))
-        );
+        // Résolution en lot : une seule lecture par compendium pour tout le
+        // vivier, l'ordre des résultats restant celui des références.
+        const resolved = await CardGenerated.resolveCompendiumCards(references);
         const cards = [];
         const missing = [];
         resolved.forEach((card, i) => {

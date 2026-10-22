@@ -83,6 +83,29 @@ describe("resolveCardPool — résolution des références compendium", () => {
         expect(await CardSelection.resolveCardPool([])).toEqual({cards: [], missing: []});
         expect(await CardSelection.resolveCardPool(undefined)).toEqual({cards: [], missing: []});
     });
+
+    test("un seul chargement du compendium pour tout le lot", async () => {
+        // Ce que ce test verrouille : résolue une par une, chaque référence
+        // relisait le paquet ENTIER. Un encart qui propose des cartes sur dix
+        // niveaux en résout une quarantaine — le jeu de la carte s'arrêtait
+        // plusieurs secondes, le temps de reconstruire quarante fois tous les
+        // decks du compendium.
+        const pack = game.packs.find(() => true);
+        const references = Array.from({length: 40}, (_, i) => (i % 2 ? REF_B : REF_A));
+
+        const pool = await CardSelection.resolveCardPool(references);
+
+        expect(pool.cards).toHaveLength(40);
+        expect(pack.getDocuments).toHaveBeenCalledTimes(1);
+    });
+
+    test("une référence seule passe toujours par le même chemin", async () => {
+        const pack = game.packs.find(() => true);
+
+        expect((await CardSelection.resolveCardPool([REF_A])).cards.map(c => c.name))
+            .toEqual(["FQCARDTITLE.CardA"]);
+        expect(pack.getDocuments).toHaveBeenCalledTimes(1);
+    });
 });
 
 /**
@@ -394,6 +417,21 @@ describe("playCardSelection — encart « proposer des cartes » d'une carte jou
         const [candidates, count] = veil.mock.calls[0];
         expect(candidates.map(c => c.name).sort()).toEqual(["FQCARDTITLE.A1", "FQCARDTITLE.A2"]);
         expect(count).toBe(1);
+    });
+
+    test("mode deck : deux lectures du compendium par source, quelle que soit la taille du vivier", async () => {
+        // Le coût d'une proposition ne doit plus suivre le nombre de candidates :
+        // une lecture pour résoudre le deck source, une pour le vivier entier.
+        game.packs = makeLeveledPacks();
+        const pack = game.packs.find(() => true);
+        const hand = makeStack("hand-1");
+        vi.spyOn(CardSelection, "openSelectionVeil").mockImplementation(async cards => [cards[0]]);
+
+        await CardSelection.playCardSelection(
+            makeContent({chooseCardsFrom: "fq-card-engine.decks-pattern-fq8.Deck A",
+                chooseCardsProposed: "2", chooseCardsCount: "1"}), hand);
+
+        expect(pack.getDocuments).toHaveBeenCalledTimes(2);
     });
 
     test("sources multiples : une proposition par source, les cartes retenues s'additionnent", async () => {
