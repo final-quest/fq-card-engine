@@ -13,6 +13,8 @@ import Geometry from "../../src/domain/engine/shared/geometry.js";
 import {socket} from "../../src/hook/integration/socketlib.hook.js";
 import CombatTurn from "../../src/domain/engine/combat-turn.js";
 import Constants from "../../src/domain/constants.js";
+import TradingCards from "../../src/domain/trading/trading-cards.js";
+import CardSelection from "../../src/domain/interface/window/card-selection.js";
 import {makeCard, makeChoice} from "../factories.js";
 
 vi.mock("../../src/hook/integration/socketlib.hook.js", () => ({
@@ -771,6 +773,77 @@ describe("CardEffect / RollService / Minion / ObjectUtils", () => {
             registerResultPresenter(null);
         });
 
+        // Ce que ce test verrouille : l'encart 🃏 est une attente de JOUEUR, et il
+        // était attendu au milieu de la résolution. Une frappe runique ne montrait
+        // donc rien et ne posait ses dégâts qu'une fois les runes choisies. Il part
+        // sans être attendu : le voile s'ouvre pendant que la carte se termine.
+        it("encart 🃏 : la carte ne l'attend pas, résultat et points de vie tombent sans lui", async () => {
+            const order = [];
+            let releaseSelection;
+            registerResultPresenter(async () => {
+                order.push("résultat");
+            });
+            socket.executeAsGM.mockImplementation(name => {
+                if (name === "applyActorHpModification") {
+                    order.push("pv");
+                }
+            });
+            // Un voile que personne ne valide : la carte doit se terminer quand même.
+            const selection = vi.spyOn(CardSelection, "playCardSelection").mockImplementation(() => {
+                order.push("encart lancé");
+                return new Promise(resolve => {
+                    releaseSelection = resolve;
+                });
+            });
+            Damage.buildDamageDiceLauncher.mockImplementationOnce(async (actor, content, report) => {
+                report.addResult({
+                    targetTokenId: "token1", targetName: "Cible", value: 5,
+                    type: "damageFQ", critical: false, evasion: false
+                });
+                return [{targetTokenId: "token1", value: 5, type: "damageFQ"}];
+            });
+            const cardContent = makeChoice({
+                damage: "1d6", chooseCardsList: "fq-card-engine.decks-pattern-fq8.Deck.Carte",
+                chooseCardsCount: "1"
+            });
+
+            await CardEffect.applyCardEffect(cardContent, makeCard(), {});
+
+            // La sélection est partie en premier et court toujours : la carte est
+            // allée au bout sans elle.
+            expect(order).toEqual(["encart lancé", "résultat", "pv"]);
+            expect(selection.mock.calls[0][0]).toBe(cardContent);
+            releaseSelection(null);
+            registerResultPresenter(null);
+        });
+
+        it("encart 🃏 qui échoue : la carte se résout quand même, le rejet est seulement journalisé", async () => {
+            const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+            vi.spyOn(CardSelection, "playCardSelection").mockRejectedValue(new Error("voile cassé"));
+            Damage.buildDamageDiceLauncher.mockImplementationOnce(async (actor, content, report) => {
+                report.addResult({
+                    targetTokenId: "token1", targetName: "Cible", value: 5,
+                    type: "damageFQ", critical: false, evasion: false
+                });
+                return [{targetTokenId: "token1", value: 5, type: "damageFQ"}];
+            });
+
+            await CardEffect.applyCardEffect(
+                makeChoice({damage: "1d6", chooseCardsList: "pack.deck.carte", chooseCardsCount: "1"}),
+                makeCard(), {});
+
+            expect(socket.executeAsGM).toHaveBeenCalledWith("applyActorHpModification", "token1", 5, "damageFQ");
+            expect(consoleError).toHaveBeenCalledWith(expect.any(Error));
+        });
+
+        it("sans encart 🃏 : aucune proposition n'est déclenchée", async () => {
+            const selection = vi.spyOn(CardSelection, "playCardSelection").mockResolvedValue(null);
+
+            await CardEffect.applyCardEffect(makeChoice({damage: "1d6"}), makeCard(), {});
+
+            expect(selection).not.toHaveBeenCalled();
+        });
+
         it("un affichage défaillant ne retient pas les dégâts", async () => {
             vi.spyOn(console, "error").mockImplementation(() => {});
             registerResultPresenter(async () => {
@@ -1112,6 +1185,62 @@ describe("CardEffect / RollService / Minion / ObjectUtils", () => {
 
             expect(result).toBe(true);
             expect(ResourceHandler.checkResources).toHaveBeenCalledWith(cardContent, game.user.character);
+        });
+
+        // Ce que les tests suivants verrouillent : une copie GÉNÉRÉE naît sans
+        // origine, donc sans `source`. Son deck paraissait vide, et toute rune qui
+        // fait piocher (les trois Runes du crible) était déclarée injouable — elle
+        // ne partait jamais en jeu immédiat, sans que rien n'explique pourquoi.
+        it("carte générée qui fait piocher : le deck du joueur fait foi, la carte reste jouable", () => {
+            const deck = {cards: {size: 8}, drawnCards: []};
+            vi.spyOn(TradingCards, "getFirstDeck").mockReturnValue(deck);
+            const cardContent = makeChoice({draw: 2});
+
+            const result = CardEffect.checkIfCanUseCard(cardContent, makeCard({source: null}));
+
+            expect(result).toBe(true);
+            expect(ResourceHandler.createUserWarningMessage).not.toHaveBeenCalled();
+        });
+
+        it("carte générée sans deck du joueur : la pioche reste refusée", () => {
+            vi.spyOn(TradingCards, "getFirstDeck").mockReturnValue(undefined);
+            const cardContent = makeChoice({draw: 1});
+
+            expect(CardEffect.checkIfCanUseCard(cardContent, makeCard({source: null}))).toBe(false);
+        });
+
+        it("carte ordinaire : c'est toujours SON deck qui est compté, pas celui du joueur", () => {
+            const playerDeck = {cards: {size: 40}, drawnCards: []};
+            vi.spyOn(TradingCards, "getFirstDeck").mockReturnValue(playerDeck);
+            const cardContent = makeChoice({draw: 5});
+
+            // Deck d'origine trop court : la carte reste injouable malgré le deck du joueur.
+            const result = CardEffect.checkIfCanUseCard(cardContent,
+                makeCard({source: {cards: {size: 2}, drawnCards: []}}));
+
+            expect(result).toBe(false);
+        });
+    });
+
+    describe("drawDeckOf — le deck dont une carte fait piocher", () => {
+        it("carte ordinaire : son deck d'origine", () => {
+            const source = {id: "deck-1"};
+
+            expect(CardEffect.drawDeckOf(makeCard({source}))).toBe(source);
+        });
+
+        it("carte générée (sans origine) : le deck FQ du joueur", () => {
+            const deck = {id: "deck-joueur"};
+            vi.spyOn(TradingCards, "getFirstDeck").mockReturnValue(deck);
+
+            expect(CardEffect.drawDeckOf(makeCard({source: null}))).toBe(deck);
+        });
+
+        it("ni origine ni deck de joueur : null, jamais undefined", () => {
+            vi.spyOn(TradingCards, "getFirstDeck").mockReturnValue(undefined);
+
+            expect(CardEffect.drawDeckOf(makeCard({source: null}))).toBeNull();
+            expect(CardEffect.drawDeckOf(undefined)).toBeNull();
         });
     });
 

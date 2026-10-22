@@ -92,7 +92,7 @@ export default class CardEffect {
             if (cardContent.draw) {
                 // Même chemin que la pioche de début de tour, remélange de la défausse compris.
                 await CombatTurn.drawWithRecall(game.user, Constants.actorCurrent, card.parent,
-                    card.source, cardContent.draw);
+                    CardEffect.drawDeckOf(card), cardContent.draw);
             }
             if (cardContent.retrieveFromDiscard?.trim()) {
                 await CardEffect.retrieveCardFromDiscard(cardContent.retrieveFromDiscard, to, card);
@@ -106,8 +106,20 @@ export default class CardEffect {
             if (cardContent.duplicateFromHand?.trim()) {
                 await CardEffect.duplicateCardFromHand(cardContent, card);
             }
+            // L'encart 🃏 part SANS être attendu : le voile de sélection est une
+            // attente de joueur, et la carte n'a rien à en apprendre — sa valeur de
+            // retour n'est lue par personne. Attendu, il retenait tout ce qui suit,
+            // affichage du résultat et dégâts compris : une frappe runique ne
+            // montrait rien pendant qu'on choisissait ses runes. Lancé ici, il
+            // ouvre son voile pendant que la carte finit de se résoudre.
+            //
+            // Le lancement lit tout ce dont il a besoin dans `cardContent` avant de
+            // rendre la main (jusqu'à son premier `await`), et rien plus bas
+            // n'écrit ses champs : ce qui est proposé ne dépend donc pas du moment.
+            // Le `catch` n'est pas décoratif — une promesse abandonnée qui rejette
+            // remonterait en rejet non capturé, hors de toute pile lisible.
             if (CardSelection.hasCardSelection(cardContent)) {
-                await CardSelection.playCardSelection(cardContent, card.parent);
+                CardSelection.playCardSelection(cardContent, card.parent).catch(e => console.error(e));
             }
             if (cardContent.minions && Array.isArray(cardContent.minions)) {
                 // Les fantômes n'ont pas d'emplacement à recevoir : chacun naît sur la
@@ -201,6 +213,24 @@ export default class CardEffect {
         } else {
             createInfo(game.i18n.localize("FQCARDENGINE.InfoMsgNoAddedEffect"), {actor: Constants.actorCurrent});
         }
+    }
+
+    /**
+     * Le deck dont une carte fait piocher : son deck d'origine, ou le deck FQ du
+     * joueur quand elle n'en a pas.
+     *
+     * Une copie GÉNÉRÉE (encart 🃏, rune gravée) naît sans origine, donc sans
+     * `source`. Lu tel quel, son deck paraissait VIDE : la carte était déclarée
+     * injouable faute de cartes à piocher, et sa pioche ne tirait rien même quand
+     * le garde la laissait passer. Le deck du joueur est celui qu'elle doit viser,
+     * et pour une carte ordinaire c'est déjà exactement son `source`.
+     *
+     * @param {Card} card - La carte jouée.
+     *
+     * @returns {Cards|null} Le deck à piocher, ou null si le joueur n'en a pas.
+     */
+    static drawDeckOf(card) {
+        return card?.source ?? TradingCards.getFirstDeck(game.user.id, DECK_TYPE) ?? null;
     }
 
     /**
@@ -1142,8 +1172,9 @@ export default class CardEffect {
         if (cardContent?.draw) {
             // La défausse compte : elle sera remélangée dans le deck au moment du
             // tirage. Seul un deck ET une défausse trop courts rendent la carte injouable.
-            const available = TradingCards.countAvailableCards(card.source);
-            const recallable = card.source ? TradingCards.countRecallableCards(card.source) : 0;
+            const drawDeck = CardEffect.drawDeckOf(card);
+            const available = TradingCards.countAvailableCards(drawDeck);
+            const recallable = drawDeck ? TradingCards.countRecallableCards(drawDeck) : 0;
             if ((available + recallable) < cardContent.draw) {
                 ResourceHandler.createUserWarningMessage(game.i18n.localize("FQCARDENGINE.WarningMsgNotEnoughDraw"), Constants.actorCurrent);
                 return false;

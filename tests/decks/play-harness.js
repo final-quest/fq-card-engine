@@ -463,6 +463,30 @@ function applyDiceControl(dice) {
  *          handDestroyCalls, deckDestroyCalls,
  *          discardPile, updates, card, cardContent}`.
  */
+/**
+ * Laisse se terminer le travail que le jeu d'une carte lance SANS l'attendre.
+ *
+ * L'encart 🃏 en est le cas : `CardEffect.playChoice` lance la proposition de
+ * cartes sans l'attendre, pour que la carte montre son résultat et pose ses
+ * dégâts pendant que le joueur choisit. La carte rend donc la main avant que les
+ * cartes retenues soient créées et jouées, et le résultat ci-dessous est une
+ * PHOTO : sans cette attente, un test de jeu immédiat photographierait un état
+ * encore vide.
+ *
+ * Chaque tour vide la file des microtâches ET celle des tâches différées. Sous le
+ * harnais, cette chaîne n'enchaîne que des promesses déjà résolues (pas de
+ * présentateur de résultat enregistré, donc aucune animation) : quelques tours
+ * suffisent à la dérouler entièrement, et l'attente ne coûte rien quand rien
+ * n'est en cours.
+ *
+ * @returns {Promise<void>}
+ */
+async function settleDetachedWork() {
+    for (let round = 0; round < 10; round++) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+    }
+}
+
 export async function playChoice(rawCard, choiceIndex = 0, opts = {}) {
     await ensureEngineLoaded();
     resetHarness();
@@ -520,6 +544,8 @@ export async function playChoice(rawCard, choiceIndex = 0, opts = {}) {
         threw = true;
         error = e;
     }
+
+    await settleDetachedWork();
 
     const socketCalls = socket.executeAsGM.mock.calls;
 
