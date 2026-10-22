@@ -1,0 +1,27 @@
+{
+  "name": "Open Character Sheet",
+  "type": "script",
+  "author": "eLD9iPNHJXGMQX6z",
+  "img": "icons/sundries/documents/document-official-capital.webp",
+  "scope": "global",
+  "command": "const actor = game.user.character;\nif (!actor) {\n    ui.notifications.warn(game.i18n.localize(\"FQCARDENGINE.NoOwnedCharacter\"));\n} else {\n    // `render(true)` force l'affichage : la feuille déjà ouverte est démasquée et\n    // ramenée au premier plan plutôt que redessinée derrière les autres fenêtres.\n    actor.sheet.render(true);\n}",
+  "folder": null,
+  "flags": {},
+  "_id": "fqOpenSheetMac01",
+  "sort": 800000,
+  "ownership": {
+    "default": 0
+  },
+  "_stats": {
+    "coreVersion": "13.347",
+    "systemId": "dnd5e",
+    "systemVersion": "3.0.4",
+    "createdTime": 1710428586165,
+    "modifiedTime": 1710428586165,
+    "lastModifiedBy": "dnd5ebuilder0000",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!macros!fqOpenSheetMac01"
+}
