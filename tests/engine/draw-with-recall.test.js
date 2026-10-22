@@ -30,7 +30,9 @@ describe("CombatTurn.drawWithRecall — remélange de la défausse quand le deck
     beforeEach(() => {
         vi.restoreAllMocks();
         vi.clearAllMocks();
-        globalThis.game = {i18n: {localize: vi.fn(key => key)}};
+        globalThis.game = {i18n: {localize: vi.fn(key => key), format: vi.fn(key => key)}};
+        globalThis.ChatMessage = {create: vi.fn(), getSpeaker: vi.fn(() => ({}))};
+        globalThis.ui = {notifications: {warn: vi.fn(), error: vi.fn()}};
     });
 
     it("deck suffisant : pioche directe du nombre demandé, aucun remélange", async () => {
@@ -112,6 +114,45 @@ describe("CombatTurn.drawWithRecall — remélange de la défausse quand le deck
         await CombatTurn.drawWithRecall(makeUser(), actor, {id: "hand-1"}, {id: "deck-1", availableCards: []}, 2);
 
         expect(actor.update).not.toHaveBeenCalled();
+    });
+
+    // Ce que les tests suivants verrouillent : le score arrive d'un champ de carte,
+    // donc en chaîne. Un score illisible ne vaut pas zéro — toute comparaison avec
+    // `NaN` étant fausse, le test de deck suffisant échouait, la pioche normale
+    // était sautée, et le deck partait au remélange pour verser en main toutes ses
+    // cartes restantes, fatigue comprise.
+
+    it("score illisible : rien n'est pioché, rien n'est remélangé, le joueur est averti", async () => {
+        const recall = vi.spyOn(TradingCards, "recallCardsFromPiles").mockResolvedValue(0);
+        const deck = {id: "deck-1", availableCards: [{id: "a"}, {id: "b"}, {id: "c"}]};
+        const actor = makeActor();
+
+        const drawn = await CombatTurn.drawWithRecall(makeUser(), actor, {id: "hand-1"}, deck, "XXX");
+
+        expect(drawn).toBe(0);
+        expect(recall).not.toHaveBeenCalled();
+        expect(socket.executeAsUser).not.toHaveBeenCalled();
+        expect(socket.executeAsGM).not.toHaveBeenCalled();
+        // Ni fatigue ni dégâts : le deck n'a pas été remélangé.
+        expect(actor.update).not.toHaveBeenCalled();
+        expect(game.i18n.format).toHaveBeenCalledWith("FQCARDENGINE.WarningMsgUnreadableDrawScore",
+            {score: "XXX"});
+    });
+
+    it("score absent : refusé comme un score illisible", async () => {
+        const deck = {id: "deck-1", availableCards: [{id: "a"}, {id: "b"}]};
+
+        expect(await CombatTurn.drawWithRecall(makeUser(), makeActor(), {id: "hand-1"}, deck, undefined)).toBe(0);
+        expect(socket.executeAsUser).not.toHaveBeenCalled();
+    });
+
+    it("score en chaîne numérique : pioché normalement, comme un nombre", async () => {
+        const deck = {id: "deck-1", availableCards: [{id: "a"}, {id: "b"}, {id: "c"}, {id: "d"}]};
+
+        const drawn = await CombatTurn.drawWithRecall(makeUser(), makeActor(), {id: "hand-1"}, deck, "3");
+
+        expect(socket.executeAsUser).toHaveBeenCalledWith("drawCard", "user-1", "hand-1", "deck-1", 3);
+        expect(drawn).toBe(3);
     });
 
     it("joueur déconnecté : la pioche est déléguée au MJ", async () => {

@@ -533,14 +533,51 @@ export default class CardSelection {
     }
 
     /**
+     * Indique si une carte générée peut être jouée dans la foulée, c'est-à-dire
+     * telle quelle, sans dialogue.
+     *
+     * Le jeu immédiat n'a personne à qui demander : il prend le premier choix et
+     * ne substitue aucune variable (`hasVariables` faux). Une carte à plusieurs
+     * choix y perdrait silencieusement les autres — le joueur ne verrait jamais
+     * que le premier soit un choix. Et une carte dont une valeur dépend de
+     * `XXX`/`YYY` sans `xvalue`/`yvalue` pour la calculer partirait avec le
+     * littéral `"XXX"` dans ses champs : un score de pioche `"XXX"` ne vaut même
+     * pas zéro, il déraille à la première comparaison numérique.
+     *
+     * Ces cartes restent donc en main, à jouer par leur porteur, qui aura son
+     * dialogue pour choisir et saisir.
+     *
+     * @param {object[]} cardContents - Les choix de la carte générée.
+     *
+     * @returns {boolean} True si la carte se joue telle quelle.
+     */
+    static isAutoPlayable(cardContents) {
+        if ((cardContents?.length ?? 0) !== 1) {
+            return false;
+        }
+        const choice = cardContents[0];
+        // Un choix est une donnée pure : la sérialisation suffit à repérer un
+        // jeton de variable où qu'il soit — coût, dégâts, pioche ou script.
+        const serialized = JSON.stringify(choice ?? null);
+        return !(serialized.includes("XXX") && !choice.xvalue)
+            && !(serialized.includes("YYY") && !choice.yvalue);
+    }
+
+    /**
      * Joue les cartes générées dans la foulée de leur création, l'une après
      * l'autre : chacune part dans `playValidatedCard`, le chemin de jeu de
      * toutes les cartes, comme si le dialogue avait été validé sans rien saisir
-     * (unique choix, défausse du joueur). Une carte destinée au jeu immédiat est
-     * donc supposée jouable telle quelle — choix unique, sans variable X/Y ni
-     * sbire. Le jeu est appelé via la façade globale plutôt qu'importé :
-     * l'import fermerait le cycle `card-selection` → `card-actions` →
-     * `card-effect` → `card-selection`.
+     * (unique choix, défausse du joueur). Une carte qui ne se joue pas telle
+     * quelle reste en main (cf. {@link CardSelection.isAutoPlayable}). Le jeu est
+     * appelé via la façade globale plutôt qu'importé : l'import fermerait le
+     * cycle `card-selection` → `card-actions` → `card-effect` → `card-selection`.
+     *
+     * Une carte qui PROPOSE elle-même des cartes ne part jamais d'ici : elle
+     * rejoint simplement la main, et c'est son porteur qui la jouera. Le jeu
+     * immédiat ne descend donc jamais qu'un palier — une carte proposée, jouée —
+     * là où l'enchaîner reviendrait à dérouler sans fin une carte qui figure dans
+     * son propre vivier. Ce renvoi en main est le cas NORMAL, pas une anomalie :
+     * il ne dit rien au joueur, qui voit la carte arriver dans sa main.
      *
      * @param {Card[]} cards - Les cartes générées à jouer.
      * @param {Cards}  hand  - La main portant ces cartes.
@@ -553,6 +590,14 @@ export default class CardSelection {
             const initCardContents = card.system.fq.choices;
             const cardContents = ObjectUtils.deepCopy(initCardContents);
             const firstChoice = cardContents[0];
+            if (!CardSelection.isAutoPlayable(cardContents)) {
+                createWarning(game.i18n.format("FQCARDENGINE.WarningMsgGeneratedCardKeptInHand",
+                    {name: game.i18n.localize(card.name)}), {actor: Constants.actorCurrent, notify: true});
+                continue;
+            }
+            if (CardSelection.hasCardSelection(firstChoice)) {
+                continue;
+            }
             await globalThis.FqCardEngineModule.playValidatedCard(
                 to, {to: to.id, nameContent: firstChoice.name}, firstChoice,
                 {firstChoice, cardContents, hasVariables: false, initCardContents, currentCards: hand, card});

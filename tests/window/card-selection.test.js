@@ -568,6 +568,136 @@ describe("playGeneratedCards — jeu immédiat des cartes générées", () => {
         expect(playValidatedCard).toHaveBeenCalledTimes(2);
         expect(playValidatedCard.mock.calls[1][3].card).toBe(cardB);
     });
+
+    // Ce que les tests suivants verrouillent : le jeu immédiat n'a personne à qui
+    // demander. Il prenait le premier choix et laissait le littéral « XXX » dans
+    // les champs — un score de pioche « XXX » déraille à la première comparaison
+    // numérique et ne pioche pas ce que la carte annonce.
+
+    /** Carte générée à plusieurs choix, dont le second serait perdu. */
+    function makeMultiChoice(id) {
+        return {
+            id, name: `FQCARDTITLE.${id}`,
+            system: {fq: {choices: [{name: "FQCARDCHOICE.First"}, {name: "FQCARDCHOICE.Second"}]}}
+        };
+    }
+
+    test("isAutoPlayable : un choix unique sans variable, ou une variable calculée", () => {
+        expect(CardSelection.isAutoPlayable([{damage: "1d4"}])).toBe(true);
+        expect(CardSelection.isAutoPlayable([{draw: "XXX", xvalue: "attributes.hp.value"}])).toBe(true);
+
+        expect(CardSelection.isAutoPlayable([{damage: "1d4"}, {heal: "1d6"}])).toBe(false);
+        expect(CardSelection.isAutoPlayable([{draw: "XXX", xmax: "@int"}])).toBe(false);
+        expect(CardSelection.isAutoPlayable([{damage: "YYYd6"}])).toBe(false);
+        // La variable est repérée où qu'elle soit, script compris.
+        expect(CardSelection.isAutoPlayable([{executeEval: "const n = XXX;"}])).toBe(false);
+        expect(CardSelection.isAutoPlayable([])).toBe(false);
+        expect(CardSelection.isAutoPlayable(undefined)).toBe(false);
+    });
+
+    test("carte à plusieurs choix : laissée en main, avertissement, les suivantes partent quand même", async () => {
+        const hand = makeStack("hand-1");
+        vi.spyOn(TradingCards, "getFirstDeck").mockReturnValue(makeStack("pile-1"));
+        const playValidatedCard = vi.fn().mockResolvedValue(null);
+        globalThis.FqCardEngineModule.playValidatedCard = playValidatedCard;
+        const kept = makeMultiChoice("KeptInHand");
+        const played = makeGenerated("generated-b", {damage: "1d4"});
+
+        await CardSelection.playGeneratedCards([kept, played], hand);
+
+        expect(playValidatedCard).toHaveBeenCalledTimes(1);
+        expect(playValidatedCard.mock.calls[0][3].card).toBe(played);
+        expect(game.i18n.format).toHaveBeenCalledWith("FQCARDENGINE.WarningMsgGeneratedCardKeptInHand",
+            {name: "FQCARDTITLE.KeptInHand"});
+    });
+
+    test("variable X sans valeur calculable : laissée en main plutôt que jouée avec « XXX »", async () => {
+        const hand = makeStack("hand-1");
+        vi.spyOn(TradingCards, "getFirstDeck").mockReturnValue(makeStack("pile-1"));
+        const playValidatedCard = vi.fn().mockResolvedValue(null);
+        globalThis.FqCardEngineModule.playValidatedCard = playValidatedCard;
+        const maelstrom = makeGenerated("Maelstrom", {draw: "XXX", xmax: "@int", xmin: "1"});
+
+        await CardSelection.playGeneratedCards([maelstrom], hand);
+
+        expect(playValidatedCard).not.toHaveBeenCalled();
+    });
+
+    test("variable X calculée par la carte : jouée normalement", async () => {
+        const hand = makeStack("hand-1");
+        vi.spyOn(TradingCards, "getFirstDeck").mockReturnValue(makeStack("pile-1"));
+        const playValidatedCard = vi.fn().mockResolvedValue(null);
+        globalThis.FqCardEngineModule.playValidatedCard = playValidatedCard;
+        const computed = makeGenerated("Computed", {damage: "XXXd6", xvalue: "attributes.hp.value"});
+
+        await CardSelection.playGeneratedCards([computed], hand);
+
+        expect(playValidatedCard).toHaveBeenCalledTimes(1);
+    });
+
+    // Ce que les tests suivants verrouillent : une carte qui propose elle-même des
+    // cartes ne s'enchaîne pas. Jouée d'ici, elle ouvrait un nouveau voile, dont
+    // les cartes se jouaient à leur tour — et une carte qui figure dans son propre
+    // vivier (une gravure qui propose des gravures) déroulait sans fin. Elle
+    // rejoint la main, et c'est son porteur qui la joue : le jeu immédiat ne
+    // descend jamais qu'un palier.
+
+    test("carte qui propose des cartes : rejoint la main sans être jouée, et sans message", async () => {
+        const hand = makeStack("hand-1");
+        vi.spyOn(TradingCards, "getFirstDeck").mockReturnValue(makeStack("pile-1"));
+        const playValidatedCard = vi.fn().mockResolvedValue(null);
+        globalThis.FqCardEngineModule.playValidatedCard = playValidatedCard;
+        const engraving = makeGenerated("Engraving",
+            {chooseCardsFrom: "fq-card-engine.decks-pattern-fq8.Deck A", chooseCardsPlayNow: true});
+
+        await CardSelection.playGeneratedCards([engraving], hand);
+
+        expect(playValidatedCard).not.toHaveBeenCalled();
+        // Le renvoi en main est le cas normal : rien n'est dit au joueur.
+        expect(game.i18n.format).not.toHaveBeenCalledWith(
+            "FQCARDENGINE.WarningMsgGeneratedCardKeptInHand", expect.anything());
+    });
+
+    test("carte qui engrave une carte par référence : rejoint la main elle aussi", async () => {
+        const hand = makeStack("hand-1");
+        vi.spyOn(TradingCards, "getFirstDeck").mockReturnValue(makeStack("pile-1"));
+        const playValidatedCard = vi.fn().mockResolvedValue(null);
+        globalThis.FqCardEngineModule.playValidatedCard = playValidatedCard;
+        const forge = makeGenerated("Forge", {chooseCardsList: REF_A, chooseCardsPlayNow: true});
+
+        await CardSelection.playGeneratedCards([forge], hand);
+
+        expect(playValidatedCard).not.toHaveBeenCalled();
+    });
+
+    test("le jeu immédiat ne descend qu'un palier : aucune carte jouée n'en propose d'autres", async () => {
+        const hand = makeStack("hand-1");
+        vi.spyOn(TradingCards, "getFirstDeck").mockReturnValue(makeStack("pile-1"));
+        const played = [];
+        // Si une carte proposant des cartes partait d'ici, ce jeu relancerait la
+        // chaîne : le compteur d'appels le dirait.
+        globalThis.FqCardEngineModule.playValidatedCard = vi.fn(async (_to, _fd, cardContent) => {
+            played.push(cardContent);
+            await CardSelection.playGeneratedCards(
+                [makeGenerated("deeper", {chooseCardsFrom: "fq-card-engine.decks-pattern-fq8.Deck A"})], hand);
+        });
+
+        await CardSelection.playGeneratedCards([makeGenerated("plain", {damage: "1d4"})], hand);
+
+        expect(played).toHaveLength(1);
+    });
+
+    test("une carte sans encart part toujours normalement", async () => {
+        const hand = makeStack("hand-1");
+        vi.spyOn(TradingCards, "getFirstDeck").mockReturnValue(makeStack("pile-1"));
+        const playValidatedCard = vi.fn().mockResolvedValue(null);
+        globalThis.FqCardEngineModule.playValidatedCard = playValidatedCard;
+        const plain = makeGenerated("plain", {damage: "1d4", chooseCardsFrom: "", chooseCardsList: "  "});
+
+        await CardSelection.playGeneratedCards([plain], hand);
+
+        expect(playValidatedCard).toHaveBeenCalledTimes(1);
+    });
 });
 
 describe("chooseCards — application de la sélection", () => {

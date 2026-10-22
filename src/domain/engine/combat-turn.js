@@ -283,11 +283,12 @@ export default class CombatTurn {
      * début de tour ET pour les cartes qui font piocher : une carte ne doit jamais
      * échouer faute de cartes alors que la défausse est pleine.
      *
-     * @param {object} user  - L'utilisateur qui pioche.
-     * @param {object} actor - Le personnage de l'utilisateur.
-     * @param {Cards}  hand  - La main de destination.
-     * @param {Cards}  deck  - Le deck source.
-     * @param {number} count - Le nombre de cartes à piocher.
+     * @param {object}        user  - L'utilisateur qui pioche.
+     * @param {object}        actor - Le personnage de l'utilisateur.
+     * @param {Cards}         hand  - La main de destination.
+     * @param {Cards}         deck  - Le deck source.
+     * @param {number|string} count - Le nombre de cartes à piocher (le champ `draw`
+     *                              d'une carte le donne en chaîne).
      *
      * @returns {Promise<number>} Le nombre de cartes effectivement piochées.
      */
@@ -295,11 +296,16 @@ export default class CombatTurn {
         if (!user || !actor || !hand || !deck) {
             return 0;
         }
-        // Un score de pioche nul ou négatif passe par `drawPick`, qui publie
-        // l'avertissement dédié plutôt que de piocher.
-        if (deck.availableCards.length > count) {
-            await CombatTurn.drawPick(user, actor, hand, deck, count);
-            return count > 0 ? count : 0;
+        const score = Number(count);
+        if (!Number.isFinite(score)) {
+            createWarning(game.i18n.format("FQCARDENGINE.WarningMsgUnreadableDrawScore",
+                {score: String(count)}), {actor, notify: true});
+            return 0;
+        }
+
+        if (deck.availableCards.length > score) {
+            await CombatTurn.drawPick(user, actor, hand, deck, score);
+            return score > 0 ? score : 0;
         }
         const remainingIds = deck.availableCards.map(c => c.id);
         const recalled = await TradingCards.recallCardsFromPiles(deck);
@@ -308,7 +314,7 @@ export default class CombatTurn {
             socket.executeForEveryone("deckShuffledAlert", user.id, actor.name, fatigue);
         }
         const recycled = deck.availableCards.filter(c => !remainingIds.includes(c.id));
-        const missing = count - remainingIds.length;
+        const missing = score - remainingIds.length;
         const drawIds = remainingIds.concat(TradingCards.sampleCardIds(recycled, missing));
         if (drawIds.length > 0) {
             await CombatTurn.passCards(user, hand, deck, drawIds);
