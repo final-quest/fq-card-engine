@@ -173,7 +173,7 @@ export default class StatusEffects {
             name: "Haunt",
             img: "icons/magic/death/skeleton-skull-soul-blue.webp",
             changes: [
-                {key: "macro.execute", value: "PersistAura jb2a.aura_themed.01.orbit.loop.dark", type: "custom", priority: null}
+                {key: "macro.execute", value: "PersistAura jb2a.aura_themed.01.orbit.loop.metal", type: "custom", priority: null}
             ],
             duration: {value: "", units: "rounds"},
             expireOnDamage: false,

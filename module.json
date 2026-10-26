@@ -101,7 +101,7 @@
         "reason": "The DAE module executes effect macros (macro.execute).",
         "compatibility": {
           "minimum": "14.0.0",
-          "verified": "14.0.14"
+          "verified": "14.0.19"
         }
       }
     ],
@@ -112,7 +112,7 @@
         "reason": "The Sequencer module provides beautiful visuals effects implemented with FQ cards",
         "compatibility": {
           "minimum": "4.0.0",
-          "verified": "4.2.3"
+          "verified": "4.3.0"
         }
       },
       {
@@ -121,7 +121,7 @@
         "reason": "Every card visual effect is read from the JB2A library. Without it the cards keep their sounds and their damage blink, but play no animation.",
         "compatibility": {
           "minimum": "0.9.0",
-          "verified": "0.9.2"
+          "verified": "0.9.4"
         }
       },
       {
@@ -129,7 +129,7 @@
         "type": "module",
         "reason": "Serves the dnd5e combat rules that left this module: death saving throws at the start of a turn, and initiative rolled on joining combat.",
         "compatibility": {
-          "minimum": "3.0.0",
+          "minimum": "3.0.1",
           "verified": "3.0.1"
         }
       },
@@ -138,7 +138,7 @@
         "type": "module",
         "reason": "This module restricts the movement of players' tokens.",
         "compatibility": {
-          "minimum": "3.0.0",
+          "minimum": "3.0.1",
           "verified": "3.0.1"
         }
       }
