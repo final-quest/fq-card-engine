@@ -1507,7 +1507,8 @@
                             "value": "3",
                             "units": "rounds"
                           },
-                          "expireOnDamage": false
+                          "expireOnDamage": false,
+                          "expireOnTempHpSpent": true
                         }
                       ],
                       "messages": [

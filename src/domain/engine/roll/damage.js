@@ -670,9 +670,11 @@ export default class Damage {
 
     /**
      * Applique une modification de points de vie sur l'acteur du token cible.
-     * Pour des dégâts, consomme d'abord les PV temporaires, borne à 0, et supprime
-     * les effets marqués `expireOnDamage` ; pour un soin, plafonne au max (max +
-     * tempmax). Exécutée côté MJ via socket.
+     * Pour des dégâts, consomme d'abord les PV temporaires, borne à 0, supprime
+     * les effets marqués `expireOnDamage` et, quand les points de vie retombent
+     * au maximum nu, ceux marqués `expireOnTempHpSpent` (les boucliers dont la
+     * réserve vient d'être bue) ; pour un soin, plafonne au max (max + tempmax).
+     * Exécutée côté MJ via socket.
      *
      * @param {string} targetId   - L'id du token cible.
      * @param {number} value      - Le montant à appliquer (positif).
@@ -691,19 +693,25 @@ export default class Damage {
                 value -= targetActor.system.attributes.hp.temp;
                 targetActor.update({"system.attributes.hp.temp": 0});
             }
+            // Le total d'arrivée est RETENU plutôt que relu sur l'acteur : la mise
+            // à jour part sans être attendue, et `system.attributes.hp` rendrait
+            // encore l'ancien total au moment de juger du bouclier.
+            let hpAfterDamage = targetActor.system.attributes.hp.value;
             if (value > 0) {
-                if ((targetActor.system.attributes.hp.value) - value >= 0) {
-                    targetActor.update({
-                        "system.attributes.hp.value": targetActor.system.attributes.hp.value - value
-                    });
-                } else {
-                    targetActor.update({
-                        "system.attributes.hp.value": 0
-                    });
-                }
+                hpAfterDamage = Math.max(0, hpAfterDamage - value);
+                targetActor.update({"system.attributes.hp.value": hpAfterDamage});
             }
             if (targetActor?.effects && targetActor.effects.size > 0) {
-                targetActor.effects.filter(effect => effect?.flags?.[FqCardEngineModule.moduleName]?.expireOnDamage).forEach(effect => {
+                // Les PV temporaires FQ sont le SURPLUS au-dessus du maximum : un
+                // effet relève le plafond (`hp.tempmax`) et un gain de PV le
+                // remplit. Retomber au maximum NU — et non à `effectiveMax`, qui
+                // porte encore le bonus du bouclier — c'est les avoir tous bus :
+                // le bouclier n'a plus rien à absorber et tombe, aura comprise.
+                const tempHpSpent = hpAfterDamage <= targetActor.system.attributes.hp.max;
+                targetActor.effects.filter(effect => {
+                    const flags = effect?.flags?.[FqCardEngineModule.moduleName] ?? {};
+                    return flags.expireOnDamage || (tempHpSpent && flags.expireOnTempHpSpent);
+                }).forEach(effect => {
                     effect.delete();
                 });
             }

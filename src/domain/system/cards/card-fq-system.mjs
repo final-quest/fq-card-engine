@@ -516,6 +516,10 @@ export default class CardFqSystem extends foundry.abstract.TypeDataModel {
                         label: "FQCARDENGINE.EffectIcon"
                     }),
                     expireOnDamage: new BooleanField({required: true, label: "FQCARDENGINE.EffectExpireOnDamage"}),
+                    expireOnTempHpSpent: new BooleanField({
+                        required: true,
+                        label: "FQCARDENGINE.EffectExpireOnTempHpSpent"
+                    }),
                     showIcon: new NumberField({
                         required: true,
                         initial: 1,

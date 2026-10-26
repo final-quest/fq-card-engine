@@ -344,6 +344,7 @@
   "FQCARDENGINE.DamageTypeThunder": "tonnerre",
   "FQCARDENGINE.EffectIcon": "Icône",
   "FQCARDENGINE.EffectExpireOnDamage": "Supprimer en cas de dégâts",
+  "FQCARDENGINE.EffectExpireOnTempHpSpent": "Supprimer quand les PV temporaires sont bus",
   "FQCARDENGINE.EffectShowIcon": "Afficher l'icône sur le token",
   "FQCARDENGINE.ShowIconNever": "Jamais",
   "FQCARDENGINE.ShowIconConditional": "Tant qu'actif (temporaire)",

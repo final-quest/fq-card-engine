@@ -337,6 +337,7 @@ export default class FqCardSheet extends foundry.applications.sheets.CardConfig 
             name: "",
             img: "",
             expireOnDamage: false,
+            expireOnTempHpSpent: false,
             showIcon: 1,
             changes: [{}],
             duration: {

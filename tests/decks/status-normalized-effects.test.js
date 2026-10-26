@@ -214,6 +214,28 @@ describe("statuts normalisés — pipeline réel via playChoice", () => {
         expect(effect.flags[moduleName].expireOnSave).toBeUndefined();
     });
 
+    test("blob libre : le retrait du bouclier aux PV temporaires bus voyage dans les flags du module", async () => {
+        const result = await playChoice(cardWithEffectData([
+            {
+                name: "Magic Shield",
+                img: "icons/svg/aura.svg",
+                changes: [{key: "system.attributes.hp.tempmax", value: "6", type: "add", priority: null}],
+                duration: {value: "3", units: "rounds"},
+                expireOnDamage: false,
+                expireOnTempHpSpent: true
+            }
+        ]), 0);
+
+        expect(result.threw).toBe(false);
+        const effect = result.effectsCreated[0].effect;
+        const moduleName = globalThis.FqCardEngineModule.moduleName;
+        // Le concept FQ vit dans les flags : laissé à la racine de l'effet,
+        // Foundry le supprimerait à la création et le bouclier, une fois sa
+        // réserve bue, resterait collé à son porteur.
+        expect(effect.flags[moduleName].expireOnTempHpSpent).toBe(true);
+        expect(effect.expireOnTempHpSpent).toBeUndefined();
+    });
+
     test("mixte : un statut et un blob libre dans la même donnée d'effets coexistent", async () => {
         const result = await playChoice(cardWithEffectData([
             {status: "poison"},

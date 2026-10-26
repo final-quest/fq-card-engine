@@ -247,6 +247,34 @@ describe("Damage", () => {
             expect(persistentEffect.delete).not.toHaveBeenCalled();
         });
 
+        it("damageFQ: le bouclier marqué expireOnTempHpSpent tombe quand les PV retombent au maximum nu", () => {
+            const shield = {flags: {"fq-card-engine": {expireOnTempHpSpent: true}}, delete: vi.fn()};
+            const plainEffect = {flags: {"fq-card-engine": {expireOnDamage: false}}, delete: vi.fn()};
+            setupTargetActor({temp: 0, value: 26, max: 20, tempmax: 6}, {
+                size: 2,
+                filter: (fn) => [shield, plainEffect].filter(fn)
+            });
+
+            Damage.applyActorHpModification("token1", 6, "damageFQ");
+
+            expect(targetActor.update).toHaveBeenCalledWith({"system.attributes.hp.value": 20});
+            expect(shield.delete).toHaveBeenCalledTimes(1);
+            expect(plainEffect.delete).not.toHaveBeenCalled();
+        });
+
+        it("damageFQ: le bouclier survit tant qu'il reste des PV temporaires au-dessus du maximum", () => {
+            const shield = {flags: {"fq-card-engine": {expireOnTempHpSpent: true}}, delete: vi.fn()};
+            setupTargetActor({temp: 0, value: 26, max: 20, tempmax: 6}, {
+                size: 1,
+                filter: (fn) => [shield].filter(fn)
+            });
+
+            Damage.applyActorHpModification("token1", 3, "damageFQ");
+
+            expect(targetActor.update).toHaveBeenCalledWith({"system.attributes.hp.value": 23});
+            expect(shield.delete).not.toHaveBeenCalled();
+        });
+
         it("healFQ: bounds the heal to max + tempmax", () => {
             setupTargetActor({temp: 0, value: 20, max: 20, tempmax: 5}, {size: 0, filter: () => []});
 

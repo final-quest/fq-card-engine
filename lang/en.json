@@ -344,6 +344,7 @@
   "FQCARDENGINE.DamageTypeThunder": "thunder",
   "FQCARDENGINE.EffectIcon": "Icon",
   "FQCARDENGINE.EffectExpireOnDamage": "Expire on damage",
+  "FQCARDENGINE.EffectExpireOnTempHpSpent": "Expire once temporary HP are spent",
   "FQCARDENGINE.EffectShowIcon": "Show icon on token",
   "FQCARDENGINE.ShowIconNever": "Never",
   "FQCARDENGINE.ShowIconConditional": "While active (temporary)",

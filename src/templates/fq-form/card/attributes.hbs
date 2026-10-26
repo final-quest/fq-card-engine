@@ -454,6 +454,13 @@
                                                         name=(concat "system.fq.choices." i ".applyEffectsFormulas." formulaIndex ".effects." effectIndex ".data." dataIndex ".expireOnDamage")
                                                         rootId=../../../../rootId
                                                 }}
+                                                <label>{{localize "FQCARDENGINE.EffectExpireOnTempHpSpent"}}</label>
+                                                {{formInput
+                                                        ../../../../fields.fq.fields.choices.element.fields.applyEffectsFormulas.element.fields.effects.element.fields.data.element.fields.expireOnTempHpSpent
+                                                        value=dat.expireOnTempHpSpent
+                                                        name=(concat "system.fq.choices." i ".applyEffectsFormulas." formulaIndex ".effects." effectIndex ".data." dataIndex ".expireOnTempHpSpent")
+                                                        rootId=../../../../rootId
+                                                }}
                                             </div>
                                         </span>
                                     </fieldset>

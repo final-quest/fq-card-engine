@@ -740,21 +740,25 @@ export default class CardEffect {
             const moduleName = FqCardEngineModule.moduleName;
             // `expireOnAttack` suit le même chemin : « made » (consommé au prochain
             // jet d'attaque du porteur) ou « received » (au prochain jet qui le
-            // vise), et `expireOnSave` (consommé à la prochaine sauvegarde du
-            // porteur). Ils ne sont posés que lorsqu'ils existent, pour ne rien
-            // changer aux effets qui les ignorent.
+            // vise), `expireOnSave` (consommé à la prochaine sauvegarde du
+            // porteur) et `expireOnTempHpSpent` (le bouclier tombe quand les PV
+            // temporaires qu'il accorde ont été bus par les dégâts). Ils ne sont
+            // posés que lorsqu'ils existent, pour ne rien changer aux effets qui
+            // les ignorent.
             effect.flags = {
                 ...effect.flags,
                 [moduleName]: {
                     ...effect.flags?.[moduleName],
                     expireOnDamage: !!effect.expireOnDamage,
                     ...(effect.expireOnAttack ? {expireOnAttack: effect.expireOnAttack} : {}),
-                    ...(effect.expireOnSave ? {expireOnSave: true} : {})
+                    ...(effect.expireOnSave ? {expireOnSave: true} : {}),
+                    ...(effect.expireOnTempHpSpent ? {expireOnTempHpSpent: true} : {})
                 }
             };
             delete effect.expireOnDamage;
             delete effect.expireOnAttack;
             delete effect.expireOnSave;
+            delete effect.expireOnTempHpSpent;
             if (effect.duration) {
                 const value = CardEffect.resolveDurationComponent(effect.duration.value);
                 if (value > 0) {
