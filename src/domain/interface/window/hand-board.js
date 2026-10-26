@@ -1,4 +1,4 @@
-import TradingCards, {DECK_TYPE, HAND_TYPE, SPELLBOOK_TYPE} from "../../trading/trading-cards.js";
+import TradingCards, {HAND_TYPE} from "../../trading/trading-cards.js";
 import DisplayCard from "../card-svg/display-card.js";
 import CardCondition, {REACTIVE_READY_HOOKS} from "../../engine/shared/card-condition.js";
 import PreparedCard from "../../engine/prepared-card.js";
@@ -486,11 +486,7 @@ export default class HandBoard {
      */
     async openDeck() {
         const userId = this.currentUser?._id ?? this.currentUser?.data?._id ?? game.userId;
-        const deck = TradingCards.getFirstDeck(userId, DECK_TYPE);
-        const spellBook = TradingCards.getFirstDeck(userId, SPELLBOOK_TYPE);
-        if (spellBook && deck) {
-            SpellbookWindow.open(spellBook, deck);
-        }
+        SpellbookWindow.openForUser(userId);
     }
 
     /**

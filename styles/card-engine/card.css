@@ -4,6 +4,25 @@
    ============================================================ */
 
 /* ============================================================
+   DÉFS PARTAGÉES DES CARTES — hôte des dégradés, textures de classe et
+   masques référencés par toutes les cartes de la page
+   (partials/card-defs.hbs, monté par DisplayCard.ensureCardDefs).
+
+   JAMAIS `display: none` : un serveur de peinture logé dans un sous-arbre non
+   rendu ne peint rien, et toutes les cartes qui le référencent virent au noir.
+   D'où un hôte bien rendu, mais réduit à rien et sorti de l'écran.
+   ============================================================ */
+.fq-card-defs-host {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* ============================================================
    ZONE DES CARTES
    ============================================================ */
 

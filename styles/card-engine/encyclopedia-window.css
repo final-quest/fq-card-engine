@@ -1,0 +1,52 @@
+/* ============================================================
+   FQ CARD ENGINE — Encyclopédie des cartes (ApplicationV2, lecture seule)
+   La fenêtre porte AUSSI la classe .fq-spellbook-window : toute la grille,
+   les groupes de classe, les filtres et le panneau d'aperçu viennent de
+   styles/card-engine/spellbook-window.css. Cette feuille ne porte que les
+   écarts : aucune distribution de cartes ici, donc aucune affordance de clic,
+   et une pastille d'origine à la place de la pastille de niveau.
+   ============================================================ */
+
+/* La carte se lit, ne se clique pas : le curseur cliquable de la carte du
+   grimoire promettrait une distribution que cette vue n'offre pas. Le liseré
+   de survol, lui, reste : il signale la carte dont le panneau d'aperçu parle. */
+.fq-encyclopedia-window .fq-encyclopedia-card.fq-card,
+.fq-encyclopedia-window .fq-encyclopedia-card.fq-card-engine-card {
+    cursor: default;
+}
+
+/* Total de cartes publiées, à droite de la barre d'outils — même place et même
+   apparence que l'indicateur de taille de deck du grimoire. */
+.fq-encyclopedia-total {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    font-size: 16px;
+    color: rgba(var(--fq-cream-rgb), 0.85);
+}
+
+.fq-encyclopedia-total i {
+    color: rgba(var(--fq-cream-rgb), 0.7);
+}
+
+.fq-encyclopedia-total-count {
+    font-weight: 700;
+    color: var(--fq-gold-bright);
+}
+
+/* ============================================================
+   PASTILLE D'ORIGINE — même coin que la pastille de niveau du grimoire, dont
+   elle prend la place sur les cartes générées. Verte, comme le halo des cartes
+   générées en jeu (.fq-card--generated) : elle ne dit pas « niveau », elle dit
+   « créée par une autre carte », et le joueur a déjà vu cette couleur.
+   ============================================================ */
+.fq-encyclopedia-card-generated {
+    bottom: 2px;
+    left: 2px;
+    padding: 2px 6px;
+    font-size: 12px;
+    color: var(--fq-success-text);
+    background: rgba(var(--fq-ink-rgb), 0.92);
+    border: 1px solid rgba(var(--fq-success-rgb), 0.8);
+}

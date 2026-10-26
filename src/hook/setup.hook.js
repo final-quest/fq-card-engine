@@ -34,6 +34,7 @@ Hooks.on("setup", function () {
     // Pre Load templates.
     const templatePaths = [
         "modules/fq-card-engine/src/templates/partials/card-svg.hbs",
+        "modules/fq-card-engine/src/templates/partials/card-defs.hbs",
         "modules/fq-card-engine/src/templates/partials/targeting-panel.hbs",
         "modules/fq-card-engine/src/templates/actors/fq-character-sidebar.hbs",
         "modules/fq-card-engine/src/templates/actors/fq-npc-header.hbs",
@@ -90,6 +91,12 @@ Hooks.on("setup", function () {
     if (game.settings.get(FqCardEngineModule.moduleName, "PlayerLimitCardsRight")) {
         CONFIG.FqCardEngine.options.playerLimitCardsRight = true;
     }
+
+    // Les serveurs de peinture des cartes (dégradés des bulles, textures de
+    // classe, masque du socle) entrent dans la page une seule fois, avant la
+    // première carte : chaque carte s'y réfère au lieu d'en porter sa copie.
+    DisplayCard.ensureCardDefs();
+
     foundry.applications.handlebars.renderTemplate("modules/fq-card-engine/src/templates/board/hand-container.hbs", {
         isGM: game.user.isGM
     }).then(content => {

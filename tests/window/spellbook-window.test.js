@@ -1625,3 +1625,66 @@ describe("SpellbookWindow — panneau d'aperçu au survol prolongé (D3-01, D3-0
         expect(() => win._onClose({})).not.toThrow();
     });
 });
+
+describe("SpellbookWindow.openForUser — point d'entrée unique du bouton de barre et de la macro", () => {
+
+    /**
+     * Installe `game.cards` avec les jeux de cartes donnés, tels que
+     * `TradingCards.getFirstDeck` les résout : propriété du joueur
+     * (`ownership[userId] === 3`), type FQ et propriétaire déclaré.
+     *
+     * @param {string}   userId - L'id de l'utilisateur propriétaire.
+     * @param {string[]} types  - Les types FQ présents (`"DECK"`, `"SPELLBOOK"`).
+     *
+     * @returns {object[]} Les jeux de cartes installés.
+     */
+    function givenCardStacks(userId, types) {
+        const stacks = types.map(type => ({
+            id: `${type}-id`,
+            ownership: {[userId]: 3},
+            system: {fq: {type, owner: userId}},
+            cards: {contents: []}
+        }));
+        game.cards = stacks;
+        return stacks;
+    }
+
+    beforeEach(() => {
+        vi.spyOn(SpellbookWindow, "open").mockImplementation(() => "opened");
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    test("ouvre le grimoire avec le deck du même utilisateur", () => {
+        const [deck, spellBook] = givenCardStacks("user1", ["DECK", "SPELLBOOK"]);
+
+        const result = SpellbookWindow.openForUser("user1");
+
+        expect(SpellbookWindow.open).toHaveBeenCalledWith(spellBook, deck);
+        expect(result).toBe("opened");
+    });
+
+    test("grimoire absent : n'ouvre rien et laisse l'avertissement être publié", () => {
+        givenCardStacks("user1", ["DECK"]);
+
+        expect(SpellbookWindow.openForUser("user1")).toBeUndefined();
+        expect(SpellbookWindow.open).not.toHaveBeenCalled();
+        expect(ui.notifications.warn).toHaveBeenCalled();
+    });
+
+    test("deck absent : n'ouvre rien", () => {
+        givenCardStacks("user1", ["SPELLBOOK"]);
+
+        expect(SpellbookWindow.openForUser("user1")).toBeUndefined();
+        expect(SpellbookWindow.open).not.toHaveBeenCalled();
+    });
+
+    test("ne résout jamais les jeux de cartes d'un autre utilisateur", () => {
+        givenCardStacks("otherUser", ["DECK", "SPELLBOOK"]);
+
+        expect(SpellbookWindow.openForUser("user1")).toBeUndefined();
+        expect(SpellbookWindow.open).not.toHaveBeenCalled();
+    });
+});

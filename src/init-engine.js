@@ -8,6 +8,8 @@ import CardActions from "./domain/interface/window/card-actions.js";
 import DragDrop from "./domain/interface/window/drag-drop.js";
 import WeaponDamage from "./domain/engine/roll/weapon-damage.js";
 import CardCondition from "./domain/engine/shared/card-condition.js";
+import CardEncyclopediaWindow from "./domain/interface/window/card-encyclopedia-window.js";
+import SpellbookWindow from "./domain/interface/window/spellbook-window.js";
 import ZoneWall from "./domain/engine/shared/zone-wall.js";
 import {socket} from "./hook/integration/socketlib.hook.js";
 import {fqClassIds, hasFqClass, registerFqClass, unregisterFqClass} from "./domain/classes.js";
@@ -81,6 +83,30 @@ window.FqCardEngineModule = {
             return;
         }
         WeaponDamage.useFirstEquippedWeapon(actor, weaponToken);
+    },
+
+    /**
+     * Entrée macro de la bibliothèque : ouvre le grimoire de l'utilisateur
+     * courant, le même que le bouton de la barre de main. Avertit et n'ouvre
+     * rien si son grimoire ou son deck manque (délégué à
+     * `SpellbookWindow.openForUser`).
+     *
+     * @returns {void}
+     */
+    openSpellbook() {
+        SpellbookWindow.openForUser(game.userId);
+    },
+
+    /**
+     * Entrée macro de l'encyclopédie des cartes : ouvre la fenêtre de toutes
+     * les cartes publiées par les compendiums de decks, tous modules
+     * confondus. Lecture seule, sans référence à un personnage — rien n'y
+     * dépend de l'utilisateur qui l'ouvre.
+     *
+     * @returns {Promise<void>}
+     */
+    async openCardEncyclopedia() {
+        await CardEncyclopediaWindow.open();
     },
 
     /**

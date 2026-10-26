@@ -54,6 +54,7 @@
     "styles/card-engine/draw-reveal.css",
     "styles/card-engine/card-selection.css",
     "styles/card-engine/spellbook-window.css",
+    "styles/card-engine/encyclopedia-window.css",
     "styles/card-engine/result-window.css",
     "styles/fq-dnd5e-sheet.css"
   ],

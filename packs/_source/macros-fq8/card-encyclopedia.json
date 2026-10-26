@@ -1,0 +1,27 @@
+{
+  "name": "Card Encyclopedia",
+  "type": "script",
+  "author": "eLD9iPNHJXGMQX6z",
+  "img": "icons/sundries/gaming/game-playing-cards-deck.webp",
+  "scope": "global",
+  "command": "// Toutes les cartes publiées par les compendiums de decks, tous modules\n// confondus : une vue du contenu du jeu, sans référence à un personnage.\nawait FqCardEngineModule.openCardEncyclopedia();",
+  "folder": null,
+  "flags": {},
+  "_id": "fqCardEncyclo001",
+  "sort": 900000,
+  "ownership": {
+    "default": 0
+  },
+  "_stats": {
+    "coreVersion": "14.369",
+    "systemId": "dnd5e",
+    "systemVersion": "6.0.6",
+    "createdTime": 1761436800000,
+    "modifiedTime": 1761436800000,
+    "lastModifiedBy": "dnd5ebuilder0000",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!macros!fqCardEncyclo001"
+}

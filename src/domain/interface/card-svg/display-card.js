@@ -29,6 +29,24 @@ const HIT_WITH_WEAPON_KEYS = Object.freeze({
     "@wpnM": "FQCARDENGINE.HitWithMeleeWeapon", "@wpnR": "FQCARDENGINE.HitWithRangedWeapon"
 });
 
+/**
+ * Compteur des rendus de `card-svg.hbs` dans la page, source des suffixes
+ * d'identifiants SVG (cf. {@link DisplayCard.nextSvgUid}).
+ * @type {number}
+ */
+let svgUidCounter = 0;
+
+/** L'identifiant de l'hôte des `<defs>` partagés dans la page. */
+const CARD_DEFS_HOST_ID = "fq-card-defs-host";
+
+/**
+ * Le montage des `<defs>` partagés en cours ou déjà fait, pour que deux appels
+ * concurrents n'en montent pas deux exemplaires — ce qui rendrait les
+ * identifiants ambigus, exactement ce que ce montage unique évite.
+ * @type {Promise<void>|null}
+ */
+let cardDefsMount = null;
+
 /** Seuils (longueur max → taille de police en px), triés par longueur croissante. */
 const DESCRIPTION_SIZE_STEPS = [[1, 40], [80, 36], [110, 34], [145, 30], [200, 26], [290, 22], [340, 20], [440, 18], [9999, 16]];
 const TITLE_SIZE_STEPS = [[1, 34], [20, 32], [25, 28], [30, 24], [9999, 20]];
@@ -556,14 +574,72 @@ export default class DisplayCard {
     }
 
     /**
+     * Monte dans la page, UNE FOIS, les `<defs>` partagés par toutes les
+     * cartes (`partials/card-defs.hbs`) : dégradés des bulles, textures de
+     * classe, masque du socle. Idempotente — un hôte déjà présent dans le
+     * document suffit, et deux appels concurrents partagent la même promesse.
+     *
+     * L'hôte est réduit et sorti de l'écran, jamais `display: none` : un
+     * serveur de peinture dans un sous-arbre non rendu ne peint rien, et les
+     * cartes qui le référencent vireraient au noir — précisément le défaut que
+     * ce montage unique corrige.
+     *
+     * @returns {Promise<void>} Résolue une fois les `<defs>` disponibles.
+     */
+    static ensureCardDefs() {
+        if (document.getElementById(CARD_DEFS_HOST_ID)) {
+            return cardDefsMount ?? Promise.resolve();
+        }
+        // L'hôte a disparu du document (changement de scène, nettoyage d'un
+        // autre module) : la promesse mémorisée ne décrit plus la page.
+        cardDefsMount = (async () => {
+            const html = await foundry.applications.handlebars.renderTemplate(
+                "modules/fq-card-engine/src/templates/partials/card-defs.hbs", {});
+            if (document.getElementById(CARD_DEFS_HOST_ID)) {
+                return;
+            }
+            const host = document.createElement("div");
+            host.id = CARD_DEFS_HOST_ID;
+            host.className = "fq-card-defs-host";
+            host.setAttribute("aria-hidden", "true");
+            host.innerHTML = html;
+            document.body.appendChild(host);
+        })();
+        return cardDefsMount;
+    }
+
+    /**
+     * Le suffixe qui rend unique l'identifiant du motif d'illustration d'un
+     * rendu de carte, seule `<def>` que la carte porte encore en propre.
+     *
+     * Le gabarit `card-svg.hbs` est recopié tel quel pour CHAQUE carte
+     * affichée : deux cartes qui partagent une illustration partageraient
+     * aussi l'identifiant de son motif, et `url(#…)` résoudrait pour les deux
+     * vers la PREMIÈRE du document. Masquer celle-ci — ce que fait le moindre
+     * filtre du grimoire ou de l'encyclopédie — priverait l'autre de sa
+     * texture. Les `<defs>` partagés échappent à ce piège autrement : ils ne
+     * sont montés qu'une fois, hors de toute carte (`ensureCardDefs`).
+     *
+     * Un compteur de page plutôt qu'un identifiant tiré de la carte : la même
+     * carte peut être rendue deux fois simultanément (la grille et le panneau
+     * d'aperçu), et deux rendus vivants doivent rester indépendants.
+     *
+     * @returns {string} Un suffixe unique dans la page (`"c42"`).
+     */
+    static nextSvgUid() {
+        return `c${++svgUidCounter}`;
+    }
+
+    /**
      * Construit le socle commun des données de rendu d'une carte pour le
      * template `card.hbs` : image, nom, description (et sa taille), bulles de
-     * la carte, marque « innée » et uuid. Partagé par `HandBoard`,
-     * `SpellbookWindow` et `CardSelection`, qui y ajoutent chacun leurs champs
-     * propres (états de main, `cardsid`, `back`…) — les trois vues restent
-     * volontairement indépendantes les unes des autres (aucun import croisé
-     * entre fichiers de `interface/window/`), seul ce socle est partagé via
-     * `display-card.js`, déjà une dépendance commune aux trois.
+     * la carte, marque « innée », uuid et le suffixe d'identifiants SVG du
+     * rendu (`svgUid`, cf. {@link DisplayCard.nextSvgUid}). Partagé par
+     * `HandBoard`, `SpellbookWindow` et `CardSelection`, qui y ajoutent chacun
+     * leurs champs propres (états de main, `cardsid`, `back`…) — les trois
+     * vues restent volontairement indépendantes les unes des autres (aucun
+     * import croisé entre fichiers de `interface/window/`), seul ce socle est
+     * partagé via `display-card.js`, déjà une dépendance commune aux trois.
      *
      * @param {Card}   card      - La carte à rendre.
      * @param {number} faceIndex - L'indice de face déjà résolu par l'appelant.
@@ -583,6 +659,7 @@ export default class DisplayCard {
             ...DisplayCard.buildBubbleData(cardContent, card),
             isFQInnate: card.system?.fq?.isInnate,
             uuid: card.uuid,
+            svgUid: DisplayCard.nextSvgUid(),
             img,
             name,
         };
@@ -624,6 +701,7 @@ export default class DisplayCard {
                 description: description,
                 descriptionSize: DisplayCard.getDescriptionSizeForCardSvg(description),
                 titleSize: DisplayCard.getTitleSizeForCardSvg(name),
+                svgUid: DisplayCard.nextSvgUid(),
                 ...DisplayCard.buildBubbleData(firstChoice, card),
             };
             wrap.innerHTML = await foundry.applications.handlebars.renderTemplate(

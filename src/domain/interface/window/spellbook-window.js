@@ -3,7 +3,7 @@ import {
     buildLevelOptions, buildSpellbookGroups, computeCopyState, computeIncrementAction,
     computeToggleAction, matchesSpellbookFilters
 } from "../../engine/shared/spellbook-grid.js";
-import TradingCards from "../../trading/trading-cards.js";
+import TradingCards, {DECK_TYPE, SPELLBOOK_TYPE} from "../../trading/trading-cards.js";
 
 /** Icône Font Awesome par état de distribution (aucune pour "none"). */
 const COPY_STATE_ICONS = {
@@ -116,6 +116,29 @@ export default class SpellbookWindow extends HandlebarsApplicationMixin(Applicat
         SpellbookWindow.#instances.set(spellBook.id, app);
         app.render(true);
         return app;
+    }
+
+    /**
+     * Ouvre le grimoire d'un utilisateur, résolu depuis ses jeux de cartes : le
+     * grimoire ET le deck, car la fenêtre présente les exemplaires distribués
+     * dans le deck. Si l'un des deux manque, rien ne s'ouvre —
+     * `TradingCards.getFirstDeck` a déjà publié l'avertissement.
+     *
+     * Point d'entrée unique de l'ouverture « pour un utilisateur », partagé par
+     * le bouton de la barre de main et par la macro : la résolution du couple
+     * grimoire/deck ne se recopie pas d'un déclencheur à l'autre.
+     *
+     * @param {string} userId - L'id Foundry de l'utilisateur dont ouvrir le grimoire.
+     *
+     * @returns {SpellbookWindow|undefined} L'instance ouverte, ou rien si le grimoire ou le deck manque.
+     */
+    static openForUser(userId) {
+        const deck = TradingCards.getFirstDeck(userId, DECK_TYPE);
+        const spellBook = TradingCards.getFirstDeck(userId, SPELLBOOK_TYPE);
+        if (!spellBook || !deck) {
+            return undefined;
+        }
+        return SpellbookWindow.open(spellBook, deck);
     }
 
     /**

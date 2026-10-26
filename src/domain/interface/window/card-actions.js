@@ -167,6 +167,7 @@ export default {
             description: description,
             descriptionSize: DisplayCard.getDescriptionSizeForCardSvg(description),
             titleSize: DisplayCard.getTitleSizeForCardSvg(name),
+            svgUid: DisplayCard.nextSvgUid(),
             ...DisplayCard.buildBubbleData(firstChoice, card),
 
             discards,

@@ -1,0 +1,27 @@
+{
+  "name": "Open Library",
+  "type": "script",
+  "author": "eLD9iPNHJXGMQX6z",
+  "img": "icons/sundries/books/book-embossed-bound-brown.webp",
+  "scope": "global",
+  "command": "// La bibliothèque (grimoire) du joueur : les cartes qu'il a débloquées, et\n// leur distribution dans son deck. Même fenêtre que le bouton de la barre de\n// main ; un grimoire ou un deck manquant avertit sans rien ouvrir.\nFqCardEngineModule.openSpellbook();",
+  "folder": null,
+  "flags": {},
+  "_id": "fqOpenLibrary001",
+  "sort": 850000,
+  "ownership": {
+    "default": 0
+  },
+  "_stats": {
+    "coreVersion": "14.369",
+    "systemId": "dnd5e",
+    "systemVersion": "6.0.6",
+    "createdTime": 1761436800000,
+    "modifiedTime": 1761436800000,
+    "lastModifiedBy": "dnd5ebuilder0000",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!macros!fqOpenLibrary001"
+}

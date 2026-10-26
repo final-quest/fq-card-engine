@@ -1,9 +1,11 @@
 ## V3.x
 ### Fix Prioritaire
-- TODO tests modules importé dans l'ordre : Restrain movement enhanced combat, card engine, et card engine extended
+- QUand la main dépasse la taille de l'écran , problème d'naimation suivnat la taille de l'écran
 
 ### Fix mineure
 - La main ne parait pas entière des fois, besoin de refraichir??? si piocher avant connexion??? --> VOIR SI CA REVIENT SINON FIX MINEUR
+- Si ça devient génant, pour les choix de l'effet de la carte, mettre null de base et empecher de cliquer sur jouer si pas choisi ( comme X et Y)
+- Un script de migration des cartes qui ont changés (mettre à jour dans les decks les cartes avec le même nom et reconstruire biblibothèque?)
 
 ### Versions prévues
 #### 3.1.x
@@ -19,9 +21,6 @@
 - MINOR--> RELEASE
 
 ## Backlog
-### Fix mineure
-- Si ça devient génant, pour les choix de l'effet de la carte, mettre null de base et empecher de cliquer sur jouer si pas choisi ( comme X et Y)
-
 ### Chore:
 - Migration Eizh complète avec les niveaux
 

@@ -2,6 +2,7 @@ import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import fs from "fs";
 import path from "path";
 import DisplayCard from "../../src/domain/interface/card-svg/display-card.js";
+import {BASE_FQ_CLASSES} from "../../src/domain/classes.js";
 import FormulaDisplay, {
     ABILITY_EMOJIS, CAP_LABEL_KEYS, DAMAGE_TYPE_EMOJIS, EMOJI_TOOLTIP_KEYS, SOURCE_LABEL_KEYS, WEAPON_EMOJIS
 } from "../../src/domain/interface/card-svg/formula-display.js";
@@ -782,6 +783,7 @@ describe("DisplayCard.buildBubbleData — bulle de toucher", () => {
 describe("card-svg.hbs — bulle de toucher", () => {
 
     const template = fs.readFileSync(path.join(process.cwd(), "src", "templates", "partials", "card-svg.hbs"), "utf8");
+    const defs = fs.readFileSync(path.join(process.cwd(), "src", "templates", "partials", "card-defs.hbs"), "utf8");
 
     it("dessine une forme pour chacun des trois types, sous leur drapeau", () => {
         for (const flag of ["hitShield", "hitDie", "hitBurst"]) {
@@ -789,11 +791,113 @@ describe("card-svg.hbs — bulle de toucher", () => {
         }
     });
 
-    it("déclare les dégradés de ses trois couleurs", () => {
+    it("peint ses trois couleurs avec les dégradés partagés de la page", () => {
         for (const gradient of ["hitAttackMana", "hitSaveMana", "hitRawMana"]) {
-            expect(template, gradient).toContain(`id="${gradient}"`);
+            expect(defs, gradient).toContain(`id="${gradient}"`);
             expect(template, gradient).toContain(`url(#${gradient})`);
         }
+    });
+});
+
+/**
+ * Partage des `<defs>` entre toutes les cartes de la page
+ * (`partials/card-defs.hbs`, monté par `DisplayCard.ensureCardDefs`).
+ *
+ * Ce que ces tests verrouillent, et pourquoi : le gabarit de carte est recopié
+ * tel quel pour CHAQUE carte affichée. Toute `<def>` qu'il porterait sous un
+ * identifiant fixe serait déclarée autant de fois qu'il y a de cartes, et
+ * `url(#…)` résoudrait partout vers la première du document — masquée par le
+ * moindre filtre, elle priverait toutes les autres de leur texture (fond de
+ * carte et bulles au noir, texte et image intacts). D'où la règle : les défs
+ * partagées vivent hors des cartes, et la seule que la carte garde en propre
+ * (le motif de son illustration) porte un suffixe unique par rendu.
+ */
+describe("card-defs.hbs — serveurs de peinture partagés", () => {
+
+    const template = fs.readFileSync(path.join(process.cwd(), "src", "templates", "partials", "card-svg.hbs"), "utf8");
+    const defs = fs.readFileSync(path.join(process.cwd(), "src", "templates", "partials", "card-defs.hbs"), "utf8");
+    const idsOf = source => [...source.matchAll(/id="([^"]+)"/g)].map(match => match[1]);
+
+    it("la carte ne déclare plus que le motif de son illustration, suffixé par rendu", () => {
+        expect(idsOf(template)).toEqual(["{{ img }}-{{ svgUid }}"]);
+        expect(template).toContain("url(#{{ img }}-{{ svgUid }})");
+    });
+
+    it("chaque référence littérale de la carte est définie dans les défs partagées", () => {
+        const references = [...template.matchAll(/url\(#([^)]+)\)/g)]
+            .map(match => match[1])
+            .filter(reference => !reference.includes("{{"));
+
+        expect(references.length).toBeGreaterThan(0);
+        for (const reference of references) {
+            expect(defs, reference).toContain(`id="${reference}"`);
+        }
+    });
+
+    it("les défs partagées couvrent toutes les classes du moteur, cible de url(#{{ fqClass }})", () => {
+        expect(template).toContain("url(#{{ fqClass }})");
+        for (const classId of Object.keys(BASE_FQ_CLASSES)) {
+            expect(defs, classId).toContain(`id="${classId}"`);
+        }
+    });
+
+    it("les défs partagées ne sont jamais masquées par display:none", () => {
+        const css = fs.readFileSync(path.join(process.cwd(), "styles", "card-engine", "card.css"), "utf8");
+        const hostRule = css.slice(css.indexOf(".fq-card-defs-host"), css.indexOf("ZONE DES CARTES"));
+
+        expect(hostRule).not.toContain("display: none");
+    });
+});
+
+describe("DisplayCard.ensureCardDefs — montage unique dans la page", () => {
+
+    afterEach(() => {
+        document.getElementById("fq-card-defs-host")?.remove();
+    });
+
+    it("monte l'hôte des défs partagées dans le document", async () => {
+        await DisplayCard.ensureCardDefs();
+
+        const host = document.getElementById("fq-card-defs-host");
+        expect(host).not.toBeNull();
+        expect(host.classList.contains("fq-card-defs-host")).toBe(true);
+    });
+
+    it("deux appels, concurrents ou non, ne montent qu'un seul hôte", async () => {
+        await Promise.all([DisplayCard.ensureCardDefs(), DisplayCard.ensureCardDefs()]);
+        await DisplayCard.ensureCardDefs();
+
+        expect(document.querySelectorAll("#fq-card-defs-host")).toHaveLength(1);
+    });
+
+    it("remonte les défs si l'hôte a disparu du document", async () => {
+        await DisplayCard.ensureCardDefs();
+        document.getElementById("fq-card-defs-host").remove();
+
+        await DisplayCard.ensureCardDefs();
+
+        expect(document.querySelectorAll("#fq-card-defs-host")).toHaveLength(1);
+    });
+});
+
+describe("DisplayCard.nextSvgUid — suffixe d'identifiants propre à chaque rendu", () => {
+
+    it("ne rend jamais deux fois le même suffixe", () => {
+        expect(DisplayCard.nextSvgUid()).not.toBe(DisplayCard.nextSvgUid());
+    });
+
+    it("le socle de données de carte en porte un", () => {
+        const card = {
+            _id: "cardId", name: "FQCARDTITLE.Punch", face: 0,
+            back: {img: ""}, faces: [{img: "", text: ""}],
+            system: {fq: {level: 1, class: "monk", choices: []}}
+        };
+
+        const first = DisplayCard.buildBaseCardRenderData(card, 0);
+        const second = DisplayCard.buildBaseCardRenderData(card, 0);
+
+        expect(first.svgUid).toBeTruthy();
+        expect(second.svgUid).not.toBe(first.svgUid);
     });
 });
 

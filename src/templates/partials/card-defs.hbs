@@ -1,0 +1,127 @@
+{{!--
+    Serveurs de peinture partagés par TOUTES les cartes : dégradés des bulles,
+    textures de classe, masque du socle. Montés une seule fois dans la page
+    (DisplayCard.ensureCardDefs), jamais recopiés par carte.
+
+    Deux raisons, et la première est un bug : le gabarit de carte est recopié
+    tel quel pour chaque carte affichée. Avec ses <defs> dedans, toutes les
+    cartes de la page portaient les mêmes identifiants, et url(#monk) résolvait
+    partout vers la PREMIÈRE carte du document — masquée par le moindre filtre
+    du grimoire ou de l'encyclopédie, elle privait toutes les autres de leur
+    texture : fond de carte et bulles au noir, texte et image intacts.
+    La seconde est le poids : dix motifs porteurs d'une <image> par carte, soit
+    des centaines de nœuds pour dix fichiers PNG.
+
+    L'hôte ne doit JAMAIS être masqué par display:none : un serveur de peinture
+    dans un sous-arbre non rendu ne peint rien. Il est réduit et sorti de
+    l'écran (.fq-card-defs-host, card.css).
+--}}
+<svg class="fq-card-defs" xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false">
+    <defs>
+
+        <!-- Background textures -->
+        <radialGradient id="goldMana">
+            <stop offset="0%" stop-color="#ffe7a3"></stop>
+            <stop offset="100%" stop-color="#d29012"></stop>
+        </radialGradient>
+
+        <radialGradient id="blueMana">
+            <stop offset="0%" stop-color="#c7ddf5"></stop>
+            <stop offset="100%" stop-color="#7fa6cf"></stop>
+        </radialGradient>
+
+        <radialGradient id="redMana">
+            <stop offset="0%" stop-color="#f06b6b"></stop>
+            <stop offset="100%" stop-color="#7e2424"></stop>
+        </radialGradient>
+
+        <radialGradient id="whiteMana">
+            <stop offset="0%" stop-color="#ffffff"></stop>
+            <stop offset="100%" stop-color="#9f968d"></stop>
+        </radialGradient>
+
+        <radialGradient id="orangeMana">
+            <stop offset="0%" stop-color="#ffffff"></stop>
+            <stop offset="100%" stop-color="#ad5600"></stop>
+        </radialGradient>
+
+        <radialGradient id="greenMana">
+            <stop offset="0%" stop-color="#ffffff"></stop>
+            <stop offset="100%" stop-color="#1c7200"></stop>
+        </radialGradient>
+
+        <!-- Bulle de toucher : les couleurs des colonnes Atq / Save de la fenêtre de
+             résultat, et le rouge de ses dégâts pour les dégâts bruts. -->
+        <radialGradient id="hitAttackMana">
+            <stop offset="0%" stop-color="#fff6d6"></stop>
+            <stop offset="100%" stop-color="#e0c56b"></stop>
+        </radialGradient>
+
+        <radialGradient id="hitSaveMana">
+            <stop offset="0%" stop-color="#fdeaf7"></stop>
+            <stop offset="100%" stop-color="#d98cc4"></stop>
+        </radialGradient>
+
+        <radialGradient id="hitRawMana">
+            <stop offset="0%" stop-color="#fde3de"></stop>
+            <stop offset="100%" stop-color="#d66a5a"></stop>
+        </radialGradient>
+
+        <pattern id="neutral" patternUnits="userSpaceOnUse" width="500" height="700">
+            <image href="modules/fq-card-engine/images/cards/texture/neutral.png" width="500"
+                   height="700" preserveAspectRatio="none"/>
+        </pattern>
+
+        <pattern id="elementalist" patternUnits="userSpaceOnUse" width="500" height="700">
+            <image href="modules/fq-card-engine/images/cards/texture/elementalist.png" x="0" y="0" width="500"
+                   height="700" preserveAspectRatio="none"/>
+        </pattern>
+
+        <pattern id="guardian" patternUnits="userSpaceOnUse" width="500" height="700">
+            <image href="modules/fq-card-engine/images/cards/texture/guardian.png" x="0" y="0" width="500"
+                   height="700" preserveAspectRatio="none"/>
+        </pattern>
+
+        <pattern id="illusionist" patternUnits="userSpaceOnUse" width="500" height="700">
+            <image href="modules/fq-card-engine/images/cards/texture/illusionist.png" x="0" y="0" width="500"
+                   height="700" preserveAspectRatio="none"/>
+        </pattern>
+
+        <pattern id="monk" patternUnits="userSpaceOnUse" width="500" height="700">
+            <image href="modules/fq-card-engine/images/cards/texture/monk.png" x="0" y="0" width="500"
+                   height="700" preserveAspectRatio="none"/>
+        </pattern>
+
+        <pattern id="trapper" patternUnits="userSpaceOnUse" width="500" height="700">
+            <image href="modules/fq-card-engine/images/cards/texture/trapper.png" x="0" y="0" width="500"
+                   height="700" preserveAspectRatio="none"/>
+        </pattern>
+        <pattern id="white-mage" patternUnits="userSpaceOnUse" width="500" height="700">
+            <image href="modules/fq-card-engine/images/cards/texture/white-mage.png" x="0" y="0" width="500"
+                   height="700" preserveAspectRatio="none"/>
+        </pattern>
+
+        <pattern id="witch" patternUnits="userSpaceOnUse" width="500" height="700">
+            <image href="modules/fq-card-engine/images/cards/texture/witch.png" x="0" y="0" width="500"
+                   height="700" preserveAspectRatio="none"/>
+        </pattern>
+
+        <pattern id="fencing-master" patternUnits="userSpaceOnUse" width="500" height="700">
+            <image href="modules/fq-card-engine/images/cards/texture/fencing-master.png" x="0" y="0" width="500"
+                   height="700" preserveAspectRatio="none"/>
+        </pattern>
+
+        <pattern id="runic-warrior" patternUnits="userSpaceOnUse" width="500" height="700">
+            <image href="modules/fq-card-engine/images/cards/texture/runic-warrior.png" x="0" y="0" width="500"
+                   height="700" preserveAspectRatio="none"/>
+        </pattern>
+
+        
+
+        <clipPath id="socleClip">
+            <rect x="138" y="360" width="347" height="45"/>
+        </clipPath>
+
+    </defs>
+</svg>
