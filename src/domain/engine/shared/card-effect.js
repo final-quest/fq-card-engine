@@ -197,6 +197,12 @@ export default class CardEffect {
                 await CardEffect.applyPendingEffects(pending);
             }
 
+            // Les points de vie du choix s'appliquent APRÈS ses effets : un
+            // bouclier vient d'y relever le plafond du lanceur (`hp.tempmax`), et
+            // c'est ce plafond relevé qui laisse le gain s'inscrire au-dessus du
+            // maximum nu — la réserve que le bouclier aura ensuite à absorber.
+            ResourceHandler.applyHpModification(cardContent, Constants.actorCurrent);
+
             // Orientation vers la cible, avant les FX : le lanceur regarde ce qu'il vise.
             Facing.faceTarget(Constants.myToken, frozenTargets?.[0]);
 

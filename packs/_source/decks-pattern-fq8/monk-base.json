@@ -1106,7 +1106,8 @@
                             "value": "1",
                             "units": "rounds"
                           },
-                          "expireOnDamage": false
+                          "expireOnDamage": false,
+                          "expireOnTempHpSpent": true
                         }
                       ],
                       "messages": []

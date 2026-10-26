@@ -75,6 +75,10 @@ describe("ResourceHandler", () => {
 
     test("checkConsumeResources", () => {
         ResourceHandler.consumeResources(resources, actor);
+        // Trois réserves, les PV exclus : ils s'appliquent à part, une fois les
+        // effets du choix posés (cf. `applyHpModification`).
+        expect(actor.update).toHaveBeenCalledTimes(3);
+        ResourceHandler.applyHpModification(resources, actor);
         expect(actor.update).toHaveBeenCalledTimes(4);
     });
 
@@ -105,10 +109,10 @@ describe("ResourceHandler", () => {
             expect(localActor.update).toHaveBeenCalledWith({"system.fq.minions.sacrificedMinion": 0});
         });
 
-        it("caps hp at its max", () => {
-            const localActor = {system: {attributes: {hp: {value: 18, max: 20}}}, update: vi.fn()};
+        it("ne touche pas aux PV : ils s'appliquent à part, une fois les effets posés", () => {
+            const localActor = {system: {attributes: {hp: {value: 18, max: 20, tempmax: 0}}}, update: vi.fn()};
             ResourceHandler.consumeResources({hp: 5}, localActor);
-            expect(localActor.update).toHaveBeenCalledWith({"system.attributes.hp.value": 20});
+            expect(localActor.update).not.toHaveBeenCalled();
         });
 
         it("caps mana at its max", () => {
@@ -127,6 +131,52 @@ describe("ResourceHandler", () => {
             const localActor = {system: {fq: {action: {value: 8, max: 10}}}, update: vi.fn()};
             ResourceHandler.consumeResources({action: 5}, localActor);
             expect(localActor.update).toHaveBeenCalledWith({"system.fq.action.value": 13});
+        });
+    });
+
+    // ─── applyHpModification — plafond effectif et numérisation ────────────────
+
+    describe("ResourceHandler.applyHpModification", () => {
+        /**
+         * Un acteur à l'état donné, dont les mises à jour sont espionnées.
+         *
+         * @param {object} hp - Le bloc de points de vie (value, max, tempmax).
+         *
+         * @returns {object} L'acteur espionné.
+         */
+        function actorWithHp(hp) {
+            return {system: {attributes: {hp}}, update: vi.fn()};
+        }
+
+        it("plafonne le gain au maximum EFFECTIF, bonus de bouclier compris", () => {
+            const localActor = actorWithHp({value: 18, max: 20, tempmax: 6});
+            ResourceHandler.applyHpModification({hp: 10}, localActor);
+            expect(localActor.update).toHaveBeenCalledWith({"system.attributes.hp.value": 26});
+        });
+
+        it("applique un coût sans l'écrêter", () => {
+            const localActor = actorWithHp({value: 18, max: 20, tempmax: 0});
+            ResourceHandler.applyHpModification({hp: -4}, localActor);
+            expect(localActor.update).toHaveBeenCalledWith({"system.attributes.hp.value": 14});
+        });
+
+        it("numérise un montant qu'un script de carte a réécrit en texte", () => {
+            const localActor = actorWithHp({value: 20, max: 200, tempmax: 0});
+            ResourceHandler.applyHpModification({hp: "17"}, localActor);
+            expect(localActor.update).toHaveBeenCalledWith({"system.attributes.hp.value": 37});
+        });
+
+        it("ignore un montant qui n'est pas un nombre plutôt que d'écrire une valeur absurde", () => {
+            const localActor = actorWithHp({value: 20, max: 200, tempmax: 0});
+            ResourceHandler.applyHpModification({hp: "(4*@con)+1d12"}, localActor);
+            expect(localActor.update).not.toHaveBeenCalled();
+        });
+
+        it("ne fait rien sans montant, ni sans acteur", () => {
+            const localActor = actorWithHp({value: 20, max: 200, tempmax: 0});
+            ResourceHandler.applyHpModification({hp: 0}, localActor);
+            expect(localActor.update).not.toHaveBeenCalled();
+            expect(() => ResourceHandler.applyHpModification({hp: 5}, null)).not.toThrow();
         });
     });
 

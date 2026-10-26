@@ -27,6 +27,7 @@ vi.mock("../../src/hook/integration/socketlib.hook.js", () => ({
 vi.mock("../../src/domain/engine/shared/resource-handler.js", () => ({
     default: {
         consumeResources: vi.fn(),
+        applyHpModification: vi.fn(),
         createUserWarningMessage: vi.fn(),
         checkResources: vi.fn(),
         validateUseSpellInTurn: vi.fn(() => true)

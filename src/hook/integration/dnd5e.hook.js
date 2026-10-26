@@ -78,6 +78,7 @@ const consumeUnlessRolled = (activity) => {
         return;
     }
     ResourceHandler.consumeResources(activity.item?.system?.fq, activity.actor);
+    ResourceHandler.applyHpModification(activity.item?.system?.fq, activity.actor);
 };
 
 /**
@@ -242,6 +243,7 @@ Hooks.on("dnd5e.rollDamageV2", async (rolls, {subject}) => {
 
     if (!opportunityTarget && ROLL_CONSUMING_TYPES.includes(subject.type)) {
         ResourceHandler.consumeResources(item.system?.fq, subject.actor);
+        ResourceHandler.applyHpModification(item.system?.fq, subject.actor);
     }
     // Le profil de toucher de l'activité voyage avec le contenu, comme les
     // cibles imposées : c'est l'activité qui porte le modificateur d'attaque ou
