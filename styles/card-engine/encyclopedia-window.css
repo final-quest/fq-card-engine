@@ -3,9 +3,25 @@
    La fenêtre porte AUSSI la classe .fq-spellbook-window : toute la grille,
    les groupes de classe, les filtres et le panneau d'aperçu viennent de
    styles/card-engine/spellbook-window.css. Cette feuille ne porte que les
-   écarts : aucune distribution de cartes ici, donc aucune affordance de clic,
-   et une pastille d'origine à la place de la pastille de niveau.
+   écarts : un habillage bleu nuit, aucune distribution de cartes ici, donc
+   aucune affordance de clic, et une pastille d'origine en plus de la pastille
+   de niveau sur les cartes générées.
    ============================================================ */
+
+/* ============================================================
+   HABILLAGE BLEU NUIT — là où le grimoire est noir d'encre et brun chaud. Les
+   deux fenêtres partageant toute leur mise en page, la teinte est ce qui dit
+   d'un coup d'œil laquelle est ouverte. Mêmes sélecteurs et mêmes opacités que
+   les règles du grimoire, écrasées par l'ordre de chargement (module.json).
+   ============================================================ */
+.fq-encyclopedia-window .window-content {
+    background: rgba(var(--fq-ink-blue-rgb), 0.97);
+}
+
+.fq-encyclopedia-window .fq-spellbook-group-header,
+.fq-encyclopedia-window .fq-spellbook-preview {
+    background: rgba(var(--fq-panel-blue-rgb), 0.85);
+}
 
 /* La carte se lit, ne se clique pas : le curseur cliquable de la carte du
    grimoire promettrait une distribution que cette vue n'offre pas. Le liseré
@@ -36,14 +52,17 @@
 }
 
 /* ============================================================
-   PASTILLE D'ORIGINE — même coin que la pastille de niveau du grimoire, dont
-   elle prend la place sur les cartes générées. Verte, comme le halo des cartes
-   générées en jeu (.fq-card--generated) : elle ne dit pas « niveau », elle dit
-   « créée par une autre carte », et le joueur a déjà vu cette couleur.
+   PASTILLE D'ORIGINE — coin supérieur droit, le seul libre ici : la pastille
+   de niveau garde son coin inférieur gauche (le niveau situe la carte dans la
+   progression de sa classe, y compris générée), et le badge d'exemplaires du
+   grimoire, qui occuperait le coin inférieur droit, n'existe pas dans cette
+   vue. Verte, comme le halo des cartes générées en jeu (.fq-card--generated) :
+   elle ne dit pas « niveau », elle dit « créée par une autre carte », et le
+   joueur a déjà vu cette couleur.
    ============================================================ */
 .fq-encyclopedia-card-generated {
-    bottom: 2px;
-    left: 2px;
+    top: 2px;
+    right: 2px;
     padding: 2px 6px;
     font-size: 12px;
     color: var(--fq-success-text);

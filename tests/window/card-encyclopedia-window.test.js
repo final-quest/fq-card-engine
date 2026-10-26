@@ -15,9 +15,10 @@ const {default: CardEncyclopediaWindow} = await import(
  *   classes du grimoire ; une carte qui garderait son `data-action` ou son
  *   attribut de glisser-déposer rendrait cliquable une vue qui n'a aucun deck
  *   à muter.
- * — Le niveau d'une carte générée. Il ne la décrit pas : elle ne porte donc
- *   pas de pastille de niveau et le filtre de niveau ne doit jamais la
- *   retenir (`data-card-level` vide).
+ * — Le niveau d'une carte générée. Aucune montée de niveau ne la débloque,
+ *   mais son niveau la situe dans la progression de sa classe : elle porte
+ *   donc sa pastille de niveau, sa pastille d'origine EN PLUS, et le filtre de
+ *   niveau la retient comme les autres (`data-card-level` renseigné).
  *
  * Le chrome réel d'`ApplicationV2` (rendu, position, premier plan) reste hors
  * Vitest, comme pour le grimoire : la racine de fenêtre est fabriquée à la
@@ -99,7 +100,7 @@ describe("CardEncyclopediaWindow._prepareContext — métadonnées seules, aucun
 
         expect(context.isEmpty).toBe(false);
         expect(context.total).toBe(2);
-        expect(context.levelOptions).toEqual([3]);
+        expect(context.levelOptions).toEqual([1, 3]);
         expect(context.groups).toEqual([{classKey: "monk", classLabel: "monk", count: 2}]);
         expect(JSON.stringify(context)).not.toContain("faces");
     });
@@ -158,12 +159,12 @@ describe("CardEncyclopediaWindow._onRender — grille de cartes en lecture seule
         expect(playable.dataset.cardLevel).toBe("3");
     });
 
-    test("la carte générée porte la pastille d'origine, sans niveau ni pastille de niveau", () => {
+    test("la carte générée porte son niveau ET la pastille d'origine", () => {
         const [, generated] = grid.querySelectorAll(".fq-spellbook-card");
 
+        expect(generated.querySelector(".fq-spellbook-card-level").textContent).toBe("1");
         expect(generated.querySelector(".fq-encyclopedia-card-generated")).not.toBeNull();
-        expect(generated.querySelector(".fq-spellbook-card-level")).toBeNull();
-        expect(generated.dataset.cardLevel).toBe("");
+        expect(generated.dataset.cardLevel).toBe("1");
     });
 
     test("aucune carte ne porte de badge d'exemplaires : rien n'est distribué ici", () => {
@@ -177,12 +178,12 @@ describe("CardEncyclopediaWindow._onRender — grille de cartes en lecture seule
         expect(cards.map(card => card.dataset.cardName)).toEqual(["FQCARDTITLE.Punch", "FQCARDTITLE.Surge"]);
     });
 
-    test("un filtre de niveau laisse la carte générée hors des résultats", () => {
-        SpellbookWindow.applyFilters(grid, {classKey: "", level: "3", search: ""});
+    test("le filtre de niveau retient la carte générée par son propre niveau", () => {
+        SpellbookWindow.applyFilters(grid, {classKey: "", level: "1", search: ""});
 
         const [playable, generated] = grid.querySelectorAll(".fq-spellbook-card");
-        expect(playable.classList.contains("fq-spellbook-card--filtered-out")).toBe(false);
-        expect(generated.classList.contains("fq-spellbook-card--filtered-out")).toBe(true);
+        expect(playable.classList.contains("fq-spellbook-card--filtered-out")).toBe(true);
+        expect(generated.classList.contains("fq-spellbook-card--filtered-out")).toBe(false);
     });
 });
 

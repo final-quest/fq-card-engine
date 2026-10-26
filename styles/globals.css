@@ -46,6 +46,10 @@
     /* Bleu (carte réactive préparée) — aligné sur PREPARED_COLOR #5AAAE6 */
     --fq-prepared-rgb: 90, 170, 230;
 
+    /* Bleu nuit (fond et panneaux de l'encyclopédie) */
+    --fq-ink-blue-rgb: 10, 18, 42;
+    --fq-panel-blue-rgb: 26, 38, 72;
+
     /* ═══════════════════════════════════════════════════════════
        JETONS SÉMANTIQUES — habillage de l'interface cartes
        (partagés par le container, les overlays et les dialogues)

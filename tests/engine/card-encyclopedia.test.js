@@ -14,8 +14,13 @@ import {
  *   `decks-pattern-fq8` portant un `"Monk Base"` : sans déduplication, chaque
  *   carte de la classe apparaîtrait deux fois dans la grille.
  * — La distinction jouable/générée. Une carte générée n'est pas débloquée par
- *   une montée de niveau ; son niveau ne la décrit pas, il ne doit donc ni
- *   être proposé au filtre de niveau ni servir à l'ordonner.
+ *   une montée de niveau : elle reste groupée après les jouables, dans un bloc
+ *   séparé. Son niveau la situe en revanche dans la progression de sa classe,
+ *   il ordonne donc son bloc et alimente le filtre de niveau comme les autres.
+ * — Les decks dont les cartes ne se construisent pas. Les decks de runes du
+ *   guerrier runique sont dans ce cas au même titre que les decks `Generated` :
+ *   sans eux, des cartes impossibles à mettre dans un deck s'afficheraient
+ *   comme jouables.
  *
  * Les cartes et decks sont des littéraux fabriqués ici : aucune donnée
  * d'équilibrage réelle (noms de cartes des paquets, niveaux, nombre
@@ -35,6 +40,10 @@ function makeDeck(name, cards) {
 describe("isGeneratedDeck", () => {
     it("reconnaît un deck de cartes générées par son suffixe", () => {
         expect(isGeneratedDeck(makeDeck("Monk Generated", []))).toBe(true);
+    });
+
+    it("reconnaît un deck de runes, que le joueur ne construit pas davantage", () => {
+        expect(isGeneratedDeck(makeDeck("Runic-Warrior Blue Runes", []))).toBe(true);
     });
 
     it("ne retient ni les decks de classe ni le deck neutre", () => {
@@ -148,28 +157,27 @@ describe("orderEncyclopediaCards", () => {
         expect(ordered).toEqual([playable, generated]);
     });
 
-    it("trie les cartes générées entre elles par nom localisé", () => {
-        const b = makeCard({name: "FQCARDTITLE.B"});
-        const a = makeCard({name: "FQCARDTITLE.A"});
+    it("trie les cartes générées entre elles par niveau puis par nom localisé", () => {
+        const highA = makeCard({name: "FQCARDTITLE.A", level: 4});
+        const lowZ = makeCard({name: "FQCARDTITLE.Z", level: 1});
+        const lowB = makeCard({name: "FQCARDTITLE.B", level: 1});
 
-        const ordered = orderEncyclopediaCards([
-            {card: b, generated: true},
-            {card: a, generated: true}
-        ]);
+        const ordered = orderEncyclopediaCards(
+            [highA, lowZ, lowB].map(card => ({card, generated: true})));
 
-        expect(ordered).toEqual([a, b]);
+        expect(ordered).toEqual([lowB, lowZ, highA]);
     });
 });
 
 describe("encyclopediaLevelOptions", () => {
-    it("ne propose que les niveaux des cartes jouables, triés", () => {
+    it("propose les niveaux de toutes les cartes, générées comprises, triés", () => {
         const entries = [
             {card: makeCard({name: "FQCARDTITLE.C", level: 3}), generated: false},
             {card: makeCard({name: "FQCARDTITLE.A", level: 1}), generated: false},
             {card: makeCard({name: "FQCARDTITLE.G", level: 7}), generated: true}
         ];
 
-        expect(encyclopediaLevelOptions(entries)).toEqual([1, 3]);
+        expect(encyclopediaLevelOptions(entries)).toEqual([1, 3, 7]);
     });
 });
 

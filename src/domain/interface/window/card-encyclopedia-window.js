@@ -184,10 +184,12 @@ export default class CardEncyclopediaWindow extends HandlebarsApplicationMixin(A
     }
 
     /**
-     * Pose sur une carte déjà rendue la pastille de la carte générée, à la
-     * place de la pastille de niveau : elle n'est pas débloquée par une
-     * montée de niveau, c'est une autre carte qui la crée en jeu. Retour
-     * silencieux sans `.fq-card-inner`, miroir des pastilles du grimoire.
+     * Pose sur une carte déjà rendue la pastille de la carte générée, dans le
+     * coin opposé à sa pastille de niveau : les deux se lisent ensemble — le
+     * niveau situe la carte dans la progression de sa classe, la pastille
+     * d'origine dit qu'aucune montée de niveau ne la débloque, c'est une autre
+     * carte qui la crée en jeu. Retour silencieux sans `.fq-card-inner`,
+     * miroir des pastilles du grimoire.
      *
      * @param {Element} cardElement - L'élément racine de la carte rendue.
      *
@@ -212,14 +214,14 @@ export default class CardEncyclopediaWindow extends HandlebarsApplicationMixin(A
      * l'ordre reçu : vide le conteneur, rend chaque carte via le gabarit
      * partagé `board/card.hbs`, puis pose les marques de cette vue — la carte
      * ne se glisse pas, ne se clique pas (aucun `data-action` : il n'y a rien
-     * à distribuer), porte sa pastille de niveau ou, pour une carte générée,
-     * sa pastille d'origine.
+     * à distribuer), porte sa pastille de niveau et, pour une carte générée,
+     * sa pastille d'origine en plus.
      *
      * Les attributs lus par les filtres suivent : `data-card-class` recopié du
-     * conteneur de groupe, `data-card-name` le nom localisé, et
-     * `data-card-level` VIDE pour une carte générée — son niveau ne la décrit
-     * pas, le filtre de niveau ne doit donc jamais la retenir (il ne propose
-     * pas non plus son niveau, cf. `encyclopediaLevelOptions`).
+     * conteneur de groupe, `data-card-name` le nom localisé et `data-card-level`
+     * le niveau, carte générée comprise — le filtre de niveau les retient comme
+     * les autres (cf. `encyclopediaLevelOptions`, qui propose aussi leurs
+     * niveaux).
      *
      * Les écouteurs d'aperçu sont posés PAR CARTE et non délégués
      * (`mouseenter`/`mouseleave` ne bouillonnent pas) ; cette méthode recrée
@@ -247,13 +249,12 @@ export default class CardEncyclopediaWindow extends HandlebarsApplicationMixin(A
             el.setAttribute("draggable", "false");
             SpellbookWindow.applyNameTooltip(el);
             const level = Number(card?.system?.fq?.level) || 0;
+            SpellbookWindow.applyLevelBadge(el, level);
             if (generated) {
                 CardEncyclopediaWindow.applyGeneratedBadge(el);
-            } else {
-                SpellbookWindow.applyLevelBadge(el, level);
             }
             el.dataset.cardClass = container.dataset.spellbookCards ?? "";
-            el.dataset.cardLevel = generated ? "" : String(level);
+            el.dataset.cardLevel = String(level);
             el.dataset.cardName = game.i18n.localize(card.name);
             el.addEventListener("mouseenter", () => this.#schedulePreview(card));
             el.addEventListener("mouseleave", () => this.#cancelPreview());

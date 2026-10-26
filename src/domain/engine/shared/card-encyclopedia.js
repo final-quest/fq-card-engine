@@ -5,12 +5,14 @@ import {buildLevelOptions, groupCardsByClass, localizeClassKey, sortCardsByLevel
 export const PATTERN_PACK_NAME = "decks-pattern-fq8";
 
 /**
- * Le suffixe des decks de cartes générées (`"Monk Generated"`) : ces cartes ne
- * se débloquent pas en montant de niveau, d'autres cartes les créent en cours
- * de partie. Le reste des decks du compendium (`"<Classe> Base"`,
+ * Les suffixes des decks patrons dont les cartes ne se construisent pas : les
+ * decks de cartes générées (`"Monk Generated"`) et les decks de runes du
+ * guerrier runique (`"Runic-Warrior Blue Runes"`). Dans les deux cas, ce sont
+ * d'autres cartes qui mettent celles-ci en jeu, aucune montée de niveau ne les
+ * débloque. Le reste des decks du compendium (`"<Classe> Base"`,
  * `"Neutral Base"`) porte les cartes qu'un joueur peut mettre dans son deck.
  */
-export const GENERATED_DECK_SUFFIX = " Generated";
+export const GENERATED_DECK_SUFFIXES = [" Generated", " Runes"];
 
 /**
  * Collecte de l'encyclopédie des cartes : l'intégralité des cartes publiées
@@ -27,14 +29,16 @@ export const GENERATED_DECK_SUFFIX = " Generated";
  */
 
 /**
- * Détermine si un deck patron porte des cartes générées par d'autres cartes.
+ * Détermine si un deck patron porte des cartes mises en jeu par d'autres
+ * cartes plutôt que construites par le joueur.
  *
  * @param {Cards} deck - Le deck patron du compendium.
  *
- * @returns {boolean} Vrai pour un deck `"<Classe> Generated"`.
+ * @returns {boolean} Vrai pour un deck `"<Classe> Generated"` ou `"<Classe> <Couleur> Runes"`.
  */
 export function isGeneratedDeck(deck) {
-    return String(deck?.name ?? "").endsWith(GENERATED_DECK_SUFFIX);
+    const name = String(deck?.name ?? "");
+    return GENERATED_DECK_SUFFIXES.some(suffix => name.endsWith(suffix));
 }
 
 /**
@@ -95,33 +99,34 @@ export async function loadEncyclopediaCards() {
 }
 
 /**
- * Ordonne les cartes de l'encyclopédie : d'abord les cartes jouables, triées
- * comme dans le grimoire (niveau croissant puis nom localisé), puis les cartes
- * générées, triées par nom localisé seul — leur niveau ne veut rien dire,
- * aucune montée de niveau ne les débloque.
+ * Ordonne les cartes de l'encyclopédie : d'abord les cartes jouables, puis les
+ * cartes générées, chaque bloc trié comme la grille du grimoire (niveau
+ * croissant puis nom localisé). Le niveau d'une carte générée ne la débloque
+ * pas, mais il la situe dans la progression de sa classe — c'est le même
+ * critère de lecture d'un bloc à l'autre, et la séparation des deux blocs dit
+ * seule ce qui se construit et ce qui ne se construit pas.
  *
  * @param {{card: Card, generated: boolean}[]} entries - Les cartes de l'encyclopédie.
  *
  * @returns {Card[]} Les cartes dans leur ordre d'affichage.
  */
 export function orderEncyclopediaCards(entries) {
-    const playable = sortCardsByLevelThenName(entries.filter(entry => !entry.generated).map(entry => entry.card));
-    const generated = entries.filter(entry => entry.generated).map(entry => entry.card)
-        .sort((a, b) => game.i18n.localize(a.name).localeCompare(game.i18n.localize(b.name)));
-    return [...playable, ...generated];
+    const cardsOf = generated => entries.filter(entry => entry.generated === generated).map(entry => entry.card);
+    return [...sortCardsByLevelThenName(cardsOf(false)), ...sortCardsByLevelThenName(cardsOf(true))];
 }
 
 /**
- * Les niveaux distincts proposés par le filtre de niveau : ceux des seules
- * cartes jouables. Une carte générée n'a pas de niveau de déblocage, le
- * proposer au filtre promettrait un critère qui ne décrit rien.
+ * Les niveaux distincts proposés par le filtre de niveau : ceux de TOUTES les
+ * cartes, générées comprises. Le filtre sert à lire l'encyclopédie par palier
+ * de progression ; écarter les cartes générées de ses options rendrait leurs
+ * niveaux introuvables alors que la grille les affiche.
  *
  * @param {{card: Card, generated: boolean}[]} entries - Les cartes de l'encyclopédie.
  *
  * @returns {number[]} Les niveaux distincts, triés par ordre croissant.
  */
 export function encyclopediaLevelOptions(entries) {
-    return buildLevelOptions(entries.filter(entry => !entry.generated).map(entry => entry.card));
+    return buildLevelOptions(entries.map(entry => entry.card));
 }
 
 /**
