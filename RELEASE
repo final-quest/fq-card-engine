@@ -1,6 +1,32 @@
 Update 3.0.1:
+    Feat:
+        - Card encyclopedia: every card published by the deck compendiums, all modules together, read-only and grouped by class, with the spellbook filters, search and preview
+        - A badge on the cards no level-up ever unlocks: another card puts them into play
+        - Player macros to open the library and the character sheet
+        - GM macro to bring the decks and the libraries back in line with the compendiums: the libraries are rebuilt, and each deck card is realigned on the pattern card of the same name without touching what the player built
+        - New effect flag: a shield expires once the temporary hit points it grants have been spent (Magic Plastron, Zen Meditation)
+        - The hit points of a choice are applied after its effects, so the gain is written above the bare maximum instead of being clipped to it
+        - Card warnings are doubled with a Foundry notification: the chat alone is covered by the play dialog, the selection veil and the result window
+        - The token HUD reopens on a right click over someone else's token, reduced to the targeting button
+        - FQ cost column on the NPC sheet: inventory, spells and features
+        - New card condition: every target is a player character with a hand, for the cards that hand a card to an ally
     Chore:
         - Version bump: Foundry 14.369 and dnd5e 6.0.6 verified, two patch releases that needed no change on our side
+        - The GM audio volume broadcast was added then withdrawn: the music settings move to Eizh Assets
+        - MAX_CLASS_LEVEL moved to classes.js, so the Node scripts outside Foundry can read it
+        - Test worlds updated
+    Fix:
+        - The golden rule of rounding up now applies to damage: the only rounding of the chain, once the FQ ladder and the trait coefficients are gathered
+        - Level-up hit points: the free numeric field of the dnd5e advancement flow becomes read-only for a player under limited rights, and an advancement carrying a value outside the hit die range is cancelled
+        - The library rebuild runs on a single client: the one that made the change schedules it, the GM carries it out, and the end signal reaches everyone
+        - A card that generates cards is no longer played automatically right after being generated
+        - A generated card with several choices or an X/Y variable stays in hand, and an unreadable draw score is reported
+        - The offered-cards panel no longer holds back the rest of the card: the result and the damage show while the player is still choosing
+        - A generated card that draws aims at the player's deck, and is playable again
+        - Compendiums are read once per played card instead of once per offered card
+        - SVG identifiers: the shared definitions are mounted once in the page and each render suffixes its own illustration pattern, so two cards sharing an illustration no longer steal each other's texture when a filter hides one of them
+        - NPC sheet: the creature size could no longer be saved
+        - Random world generation caps each class at level 12
 
 Update 3.0.0:
     Feat:

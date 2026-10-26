@@ -1,3 +1,35 @@
+v3.0.1:
+Feat :
+- Encyclopédie des cartes : toutes les cartes des compendiums de decks, tous modules confondus, en lecture seule, groupées par classe, avec les filtres, la recherche et l'aperçu du grimoire
+- Pastille sur les cartes qu'aucune montée de niveau ne débloque (cartes générées, runes)
+- Macros joueur pour ouvrir sa bibliothèque et sa feuille de personnage
+- Macro MJ pour remettre les decks et les bibliothèques au niveau des compendiums : les bibliothèques sont reconstruites, chaque carte de deck est réalignée sur le patron de même nom sans toucher à la composition du joueur
+- Nouveau drapeau d'effet : un bouclier tombe quand les PV temporaires qu'il accorde ont été bus (Plastron magique, Méditation zen)
+- Les PV d'un choix s'appliquent après ses effets, pour que le gain s'inscrive au-dessus du maximum nu au lieu d'y être écrêté
+- Les avertissements de carte sont doublés d'une notification Foundry : le chat seul est recouvert par le dialogue de jeu, le voile de sélection et la fenêtre de résultat
+- Le HUD du jeton se rouvre au clic droit sur les jetons d'autrui, réduit au seul bouton de ciblage
+- Colonne « Coût FQ » sur la feuille de PNJ : inventaire, sorts et capacités
+- Nouvelle condition de carte : toutes les cibles sont des personnages de joueur ayant une main (cartes qui confient une carte à un allié)
+
+Fix :
+- Respect de la règle d'or de l'arrondi au supérieur sur les dégâts : seul arrondi de la chaîne, une fois le cran FQ et les coefficients de traits réunis
+- PV de montée de niveau : le champ de saisie libre du flux d'avancement dnd5e passe en lecture seule pour un joueur aux droits limités, et un avancement portant une valeur hors de la plage du dé de vie est annulé
+- Reconstruction de la bibliothèque menée par un seul client : celui qui a fait la modification la programme, le MJ l'exécute, et le signal de fin atteint tout le monde
+- Une carte qui génère des cartes ne se joue plus automatiquement après avoir été générée
+- Une carte générée à plusieurs choix ou à variable X/Y reste en main, et un score de pioche illisible est signalé
+- L'encart de cartes proposées ne retient plus la suite de la carte : le résultat et les dégâts s'affichent pendant le choix
+- Les cartes générées qui font piocher visent le deck du joueur et redeviennent jouables
+- Les compendiums ne sont lus qu'une fois par carte jouée, et non une fois par carte proposée
+- Identifiants SVG : les définitions partagées sont montées une seule fois dans la page et chaque rendu suffixe son motif d'illustration, deux cartes de même illustration ne se volent plus leur texture quand un filtre masque l'une d'elles
+- Feuille de PNJ : la taille de créature ne s'enregistrait plus
+- Niveau de classe plafonné à 12 dans la génération de monde aléatoire
+
+Chore :
+- Support de la version Foundry 14.369 et DND5E 6.0.6
+- Réglage des volumes audio du MJ ajouté puis retiré : il part dans Eizh Assets
+- MAX_CLASS_LEVEL déplacé dans classes.js pour être lisible par les scripts Node hors Foundry
+- Mise à jour des mondes de test
+
 v3.0.0:
 Feat :
 - Ajout des dégâts de l'arme équipée aux cartes concernées
