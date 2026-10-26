@@ -13,6 +13,7 @@ import OpportunityAttack from "../../domain/engine/reaction/opportunity-attack.j
 import TradingCards, {DECK_TYPE, SPELLBOOK_TYPE} from "../../domain/trading/trading-cards.js";
 import SpellbookWindow from "../../domain/interface/window/spellbook-window.js";
 import {stripEditingContextOptions} from "../../domain/interface/sheet/sheet-play-mode.js";
+import HitPointsGuard from "../../domain/system/actors/hit-points-guard.js";
 
 /**
  * Types d'activité qui INFLIGENT des dégâts, et dont la résolution passe donc
@@ -396,3 +397,10 @@ Hooks.on("fq-card-engine.deckRebuilt", (userId) => {
         SpellbookWindow.open(spellBook, deck);
     }
 });
+
+// Points de vie de montée de niveau : le champ de saisie libre du flux
+// d'avancement de dnd5e n'est borné par rien, d'où ces deux verrous (cf.
+// HitPointsGuard). Le second doit rendre `false` pour annuler l'avancement :
+// `preAdvancementManagerComplete` passe par `Hooks.call`.
+Hooks.on("renderHitPointsFlow", HitPointsGuard.lockRollInput);
+Hooks.on("dnd5e.preAdvancementManagerComplete", HitPointsGuard.validateRolledHitPoints);

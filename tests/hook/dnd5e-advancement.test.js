@@ -1,6 +1,7 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
 import TradingCards, {DECK_TYPE, SPELLBOOK_TYPE} from "../../src/domain/trading/trading-cards.js";
 import SpellbookWindow from "../../src/domain/interface/window/spellbook-window.js";
+import HitPointsGuard from "../../src/domain/system/actors/hit-points-guard.js";
 
 vi.mock("../../src/hook/integration/socketlib.hook.js", () => ({
     socket: {
@@ -104,5 +105,19 @@ describe("hook/integration/dnd5e — ouverture automatique du grimoire (LEVEL-04
         expect(openSpy).toHaveBeenCalledTimes(2);
         expect(openSpy).toHaveBeenCalledWith({id: "book-user-d"}, {id: "deck-user-d"});
         expect(openSpy).toHaveBeenCalledWith({id: "book-user-e"}, {id: "deck-user-e"});
+    });
+});
+
+describe("hook/integration/dnd5e — verrous sur les PV de montée de niveau", () => {
+
+    it("verrouille le champ de saisie au rendu du flux d'avancement", () => {
+        expect(getHook("renderHitPointsFlow")).toBe(HitPointsGuard.lockRollInput);
+    });
+
+    // `preAdvancementManagerComplete` passe par `Hooks.call` : seul un handler
+    // qui rend `false` annule l'avancement, d'où le branchement sur la méthode
+    // de contrôle elle-même plutôt que sur une enveloppe qui en perdrait le retour.
+    it("contrôle la plage des PV avant l'écriture sur l'acteur", () => {
+        expect(getHook("dnd5e.preAdvancementManagerComplete")).toBe(HitPointsGuard.validateRolledHitPoints);
     });
 });

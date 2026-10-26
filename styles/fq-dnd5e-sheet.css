@@ -224,3 +224,11 @@
 .dnd5e2.sheet.fq-rights-limited .item-control:is([data-action="create"], [data-action="edit"], [data-action="delete"]) {
     display: none !important;
 }
+
+/* Champ de saisie des PV de montée de niveau verrouillé (voir
+   hit-points-guard.js) : dnd5e ne distingue pas visuellement un `readonly`,
+   le joueur cliquerait sans comprendre pourquoi rien ne se saisit. */
+.dnd5e2 input.roll-result[readonly] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
