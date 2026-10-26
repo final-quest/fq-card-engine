@@ -5,7 +5,6 @@
 ### Fix mineure
 - La main ne parait pas entière des fois, besoin de refraichir??? si piocher avant connexion??? --> VOIR SI CA REVIENT SINON FIX MINEUR
 - Si ça devient génant, pour les choix de l'effet de la carte, mettre null de base et empecher de cliquer sur jouer si pas choisi ( comme X et Y)
-- Un script de migration des cartes qui ont changés (mettre à jour dans les decks les cartes avec le même nom et reconstruire biblibothèque?)
 
 ### Versions prévues
 #### 3.1.x
@@ -19,7 +18,6 @@
 - faire bouger tornade effet magique
 - Quand fin du combat, supprimer le dossier temporaire d'acteur et supprimer les tokens (vérifier que c'est pas déjà fait)
 - MINOR--> RELEASE
-
 ## Backlog
 ### Chore:
 - Migration Eizh complète avec les niveaux
