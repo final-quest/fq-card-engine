@@ -1,4 +1,6 @@
 {
+  "name": "fq-card-engine",
+  "version": "3.0.2",
   "scripts": {
     "build": "npm run build:db",
     "build:db": "node ./utils/packs.mjs package pack",

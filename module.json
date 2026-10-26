@@ -2,7 +2,7 @@
   "id": "fq-card-engine",
   "title": "FQ Card Engine",
   "description": "Module for Final Quest 8 Battle system with hand window for displaying cards",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "license": "MIT for source code (LICENSE); Final Quest 8 game content all rights reserved (LICENSE-CONTENT)",
   "languages": [
     {
@@ -129,8 +129,8 @@
         "type": "module",
         "reason": "Serves the dnd5e combat rules that left this module: death saving throws at the start of a turn, and initiative rolled on joining combat.",
         "compatibility": {
-          "minimum": "3.0.1",
-          "verified": "3.0.1"
+          "minimum": "3.0.2",
+          "verified": "3.0.2"
         }
       },
       {
@@ -138,8 +138,8 @@
         "type": "module",
         "reason": "This module restricts the movement of players' tokens.",
         "compatibility": {
-          "minimum": "3.0.1",
-          "verified": "3.0.1"
+          "minimum": "3.0.2",
+          "verified": "3.0.2"
         }
       }
     ]
