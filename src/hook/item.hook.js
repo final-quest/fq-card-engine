@@ -8,23 +8,26 @@ import TradingCards from "../domain/trading/trading-cards.js";
 // Attention aux signatures Foundry : `preCreateItem` reçoit
 // `(document, data, options, userId)`, les options sont donc en troisième
 // position, alors que `preDeleteItem` les reçoit en deuxième.
+// Ces hooks sont rejoués sur CHAQUE client connecté : l'auteur de la
+// modification (`userId`) est transmis à `updateDeckWhenChange`, qui s'en sert
+// pour ne reconstruire qu'une seule fois, depuis le client à son origine.
 Hooks.on("preUpdateItem", (document, changed, options, _userId) => {
     if (!TradingCards.checkIfCanUpdateClasses(document, options)) return false;
     return TradingCards.checkClassLevelCap(document, changed);
 });
-Hooks.on("updateItem", (document, changed, options, _userId) => {
-    TradingCards.updateDeckWhenChange(document, options);
+Hooks.on("updateItem", (document, changed, options, userId) => {
+    TradingCards.updateDeckWhenChange(document, options, userId);
 });
 Hooks.on("preCreateItem", (document, _data, options, _userId) => {
     if (!TradingCards.checkIfCanUpdateClasses(document, options)) return false;
     return TradingCards.checkClassLevelCap(document, document);
 });
-Hooks.on("createItem", (document, options, _userId) => {
-    TradingCards.updateDeckWhenChange(document, options);
+Hooks.on("createItem", (document, options, userId) => {
+    TradingCards.updateDeckWhenChange(document, options, userId);
 });
 Hooks.on("preDeleteItem", (document, options, _userId) => {
     return TradingCards.checkIfCanUpdateClasses(document, options);
 });
-Hooks.on("deleteItem", (document, options, _userId) => {
-    TradingCards.updateDeckWhenChange(document, options);
+Hooks.on("deleteItem", (document, options, userId) => {
+    TradingCards.updateDeckWhenChange(document, options, userId);
 });

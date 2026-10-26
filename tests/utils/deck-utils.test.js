@@ -1,5 +1,9 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
-import TradingCards, {SPELLBOOK_TYPE} from "../../src/domain/trading/trading-cards.js";
+import TradingCards, {
+    registerDeckRebuildRunner,
+    registerDeckRebuiltBroadcaster,
+    SPELLBOOK_TYPE
+} from "../../src/domain/trading/trading-cards.js";
 import Constants from "../../src/domain/constants.js";
 import PlayCard from "../../src/domain/engine/play-card.js";
 
@@ -190,9 +194,10 @@ describe("TradingCards", () => {
             parent: {id: "userCharacterId"},
         };
         const options = {isAdvancement: true, parent: {id: "userCharacterId"}};
+        global.game.user.id = "acting-user";
 
         for (let i = 0; i < 7; i++) {
-            TradingCards.updateDeckWhenChange(fqDocument, options);
+            TradingCards.updateDeckWhenChange(fqDocument, options, "acting-user");
         }
 
         expect(deleteSpy).not.toHaveBeenCalled();
@@ -225,10 +230,11 @@ describe("TradingCards", () => {
 
         const docA = {system: {source: {label: "FQ"}}, type: "class", parent: {id: "char-a"}};
         const docB = {system: {source: {label: "FQ"}}, type: "class", parent: {id: "char-b"}};
+        global.game.user.id = "acting-user";
 
         for (let i = 0; i < 3; i++) {
-            TradingCards.updateDeckWhenChange(docA, {isAdvancement: true, parent: {id: "char-a"}});
-            TradingCards.updateDeckWhenChange(docB, {isAdvancement: true, parent: {id: "char-b"}});
+            TradingCards.updateDeckWhenChange(docA, {isAdvancement: true, parent: {id: "char-a"}}, "acting-user");
+            TradingCards.updateDeckWhenChange(docB, {isAdvancement: true, parent: {id: "char-b"}}, "acting-user");
         }
 
         await vi.runAllTimersAsync();
@@ -237,6 +243,73 @@ describe("TradingCards", () => {
         expect(updateSpy).toHaveBeenCalledTimes(2);
 
         vi.useRealTimers();
+    });
+
+    it("ne reconstruit pas depuis un client qui n'est pas l'auteur de la modification", async () => {
+        vi.useFakeTimers();
+
+        const updateSpy = vi.spyOn(TradingCards, "updateDeckForUser").mockResolvedValue();
+        const fqDocument = {
+            system: {source: {label: "FQ"}},
+            type: "class",
+            parent: {id: "userCharacterId"},
+        };
+        global.game.user.id = "acting-user";
+
+        TradingCards.updateDeckWhenChange(fqDocument, {isAdvancement: true, parent: {id: "userCharacterId"}}, "other-user");
+
+        await vi.runAllTimersAsync();
+
+        // Les hooks CRUD sont rejoués sur chaque client : sans ce filtre, tous
+        // reconstruiraient de front et se disputeraient la suppression du grimoire.
+        expect(updateSpy).not.toHaveBeenCalled();
+        expect(Hooks.callAll).not.toHaveBeenCalledWith("fq-card-engine.deckRebuilt", "userCharacterId");
+
+        vi.useRealTimers();
+    });
+
+    // ─── rebuildDeckForUser / signalDeckRebuilt ───────────────────────────────
+
+    describe("exécutant et diffuseur enregistrés", () => {
+        afterEach(() => {
+            registerDeckRebuildRunner(null);
+            registerDeckRebuiltBroadcaster(null);
+        });
+
+        it("confie la reconstruction à l'exécutant enregistré plutôt qu'au client local", async () => {
+            const updateSpy = vi.spyOn(TradingCards, "updateDeckForUser").mockResolvedValue();
+            const runner = vi.fn().mockResolvedValue();
+            registerDeckRebuildRunner(runner);
+
+            await TradingCards.rebuildDeckForUser("user-a");
+
+            expect(runner).toHaveBeenCalledWith("user-a");
+            expect(updateSpy).not.toHaveBeenCalled();
+        });
+
+        it("reconstruit localement sans exécutant enregistré", async () => {
+            const updateSpy = vi.spyOn(TradingCards, "updateDeckForUser").mockResolvedValue();
+
+            await TradingCards.rebuildDeckForUser("user-a");
+
+            expect(updateSpy).toHaveBeenCalledWith("user-a");
+        });
+
+        it("diffuse le signal de fin de reconstruction par le diffuseur enregistré", () => {
+            const broadcaster = vi.fn();
+            registerDeckRebuiltBroadcaster(broadcaster);
+
+            TradingCards.signalDeckRebuilt("user-a");
+
+            expect(broadcaster).toHaveBeenCalledWith("user-a");
+            expect(Hooks.callAll).not.toHaveBeenCalledWith("fq-card-engine.deckRebuilt", "user-a");
+        });
+
+        it("émet le signal localement sans diffuseur enregistré", () => {
+            TradingCards.signalDeckRebuilt("user-a");
+
+            expect(Hooks.callAll).toHaveBeenCalledWith("fq-card-engine.deckRebuilt", "user-a");
+        });
     });
 
     // ─── getFirstDeck ─────────────────────────────────────────────────────────

@@ -26,6 +26,59 @@ export const NEUTRAL_PATTERN_DECK_NAME = "Neutral Base";
  */
 export const STARTING_CARD_LEVEL = 1;
 
+/**
+ * Exécutant de la reconstruction des decks d'un utilisateur, ou null tant
+ * qu'aucun n'est enregistré (tests, ou moteur chargé sans socket) : la
+ * reconstruction se fait alors sur le client local.
+ *
+ * @type {?function(string): Promise<void>}
+ */
+let rebuildRunner = null;
+
+/**
+ * Diffuseur du signal de fin de reconstruction, ou null tant qu'aucun n'est
+ * enregistré : le signal reste alors local au client qui a reconstruit.
+ *
+ * @type {?function(string): void}
+ */
+let rebuiltBroadcaster = null;
+
+/**
+ * Enregistre l'exécutant de la reconstruction des decks d'un utilisateur.
+ *
+ * La reconstruction détruit et recrée des documents `Cards` du monde : un
+ * joueur n'a pas le droit d'en créer (permission `CARDS_CREATE`), et deux
+ * clients qui la mèneraient de front se disputeraient la suppression du
+ * grimoire — le perdant levant « Cards "id" does not exist! » puis renonçant à
+ * reconstruire. Elle n'est donc menée que par un seul client, côté MJ, et c'est
+ * le hook qui possède le socket qui vient s'annoncer ici : le moteur continue
+ * de n'en rien savoir.
+ *
+ * @param {function(string): Promise<void>} fn - L'exécutant, appelé avec l'id de l'utilisateur à reconstruire.
+ *
+ * @returns {void}
+ */
+export function registerDeckRebuildRunner(fn) {
+    rebuildRunner = fn;
+}
+
+/**
+ * Enregistre le diffuseur du signal de fin de reconstruction.
+ *
+ * Le signal doit atteindre TOUS les clients et non le seul qui a mené la
+ * reconstruction : le grimoire du déclencheur de l'advancement s'ouvre dessus
+ * (cf. `hook/integration/dnd5e.hook.js`) et les barres de main s'y
+ * rafraîchissent (cf. `domain/interface/window/hand-board.js`), chacun chez
+ * lui.
+ *
+ * @param {function(string): void} fn - Le diffuseur, appelé avec l'id de l'utilisateur reconstruit.
+ *
+ * @returns {void}
+ */
+export function registerDeckRebuiltBroadcaster(fn) {
+    rebuiltBroadcaster = fn;
+}
+
 export default class TradingCards {
 
     /**
@@ -137,7 +190,12 @@ export default class TradingCards {
      * est maintenu dans `debouncedUpdateDeckByUser` : seul le dernier événement dans la
      * fenêtre de 300 ms déclenche effectivement le delete + create.
      * Plusieurs utilisateurs sont gérés indépendamment grâce au Map.
-     * Une fois le rebuild réellement résolu, émet un hook custom local (`Hooks.callAll`)
+     * Les hooks CRUD de document étant rejoués sur CHAQUE client connecté, seul celui qui
+     * a réellement fait la modification programme la reconstruction : deux clients qui la
+     * mèneraient de front se disputeraient la suppression du grimoire (cf.
+     * {@link registerDeckRebuildRunner}). La reconstruction elle-même part ensuite chez le
+     * MJ, seul habilité à créer des documents `Cards`.
+     * Une fois le rebuild réellement résolu, émet chez tous les clients un hook custom
      * portant l'id de l'utilisateur : c'est l'unique signal fiable de fin de reconstruction
      * (D4-07), consommé par `src/hook/integration/dnd5e.hook.js` pour ouvrir automatiquement
      * le grimoire du déclencheur d'un advancement (LEVEL-04) sans jamais l'ouvrir avant que
@@ -145,8 +203,8 @@ export default class TradingCards {
      *
      * @example
      * // Déclaration du Hook au chargement du module
-     * Hooks.on("updateItem", (document, changed, options, _userId) => {
-     *     Deck.updateDeckWhenChange(document, options);
+     * Hooks.on("updateItem", (document, changed, options, userId) => {
+     *     Deck.updateDeckWhenChange(document, options, userId);
      * });
      *
      * @param {ItemData} document  - Le document item mis à jour par Foundry.
@@ -154,32 +212,67 @@ export default class TradingCards {
      * @param {boolean}  options.isAdvancement - True si la mise à jour provient d'un advancement.
      * @param {object}   options.parent        - Le parent de l'item (le personnage).
      * @param {string}   options.parent.id     - L'id du personnage concerné par l'advancement.
+     * @param {string}   userId                - L'id de l'utilisateur à l'origine de la modification.
      *
      * @returns {void}
      */
-    static updateDeckWhenChange(document, options) {
+    static updateDeckWhenChange(document, options, userId) {
         if (!options.isAdvancement || !Constants.isFQClasses(document)) return;
+        if (userId !== game.user?.id) return;
 
         const user = game.users.find(u => u.character?.id === options.parent?.id);
         if (!user?.id) return;
 
         if (!TradingCards.debouncedUpdateDeckByUser[user.id]) {
-            TradingCards.debouncedUpdateDeckByUser[user.id] = foundry.utils.debounce(async (userId) => {
+            TradingCards.debouncedUpdateDeckByUser[user.id] = foundry.utils.debounce(async (targetUserId) => {
                 // Le signal part dans tous les cas, échec compris : les
                 // consommateurs qui attendent la fin de la reconstruction
                 // resteraient sinon armés indéfiniment, sans jamais rien
                 // recevoir ni pouvoir se désarmer.
                 try {
-                    await TradingCards.updateDeckForUser(userId);
+                    await TradingCards.rebuildDeckForUser(targetUserId);
                 } catch (err) {
                     ui.notifications.error(err.message);
                 } finally {
-                    Hooks.callAll("fq-card-engine.deckRebuilt", userId);
+                    TradingCards.signalDeckRebuilt(targetUserId);
                 }
             }, 300);
         }
 
         TradingCards.debouncedUpdateDeckByUser[user.id](user.id);
+    }
+
+    /**
+     * Reconstruit les decks d'un utilisateur par l'exécutant enregistré — le MJ
+     * (cf. {@link registerDeckRebuildRunner}) — ou localement à défaut
+     * d'exécutant.
+     *
+     * @param {string} userId - L'id de l'utilisateur dont les decks sont reconstruits.
+     *
+     * @returns {Promise<void>}
+     */
+    static async rebuildDeckForUser(userId) {
+        if (rebuildRunner) {
+            return await rebuildRunner(userId);
+        }
+        return await TradingCards.updateDeckForUser(userId);
+    }
+
+    /**
+     * Émet le signal de fin de reconstruction des decks d'un utilisateur : chez
+     * tous les clients si un diffuseur est enregistré (cf.
+     * {@link registerDeckRebuiltBroadcaster}), localement à défaut.
+     *
+     * @param {string} userId - L'id de l'utilisateur dont les decks viennent d'être reconstruits.
+     *
+     * @returns {void}
+     */
+    static signalDeckRebuilt(userId) {
+        if (rebuiltBroadcaster) {
+            rebuiltBroadcaster(userId);
+            return;
+        }
+        Hooks.callAll("fq-card-engine.deckRebuilt", userId);
     }
 
     /**

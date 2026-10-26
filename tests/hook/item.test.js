@@ -24,7 +24,9 @@ describe("hook/item", () => {
             getHook("deleteItem")(document, options, "user-1");
 
             expect(TradingCards.updateDeckWhenChange).toHaveBeenCalledTimes(3);
-            expect(TradingCards.updateDeckWhenChange).toHaveBeenCalledWith(document, options);
+            // L'auteur de la modification est transmis : c'est lui qui décide
+            // quel client reconstruit, les hooks étant rejoués partout.
+            expect(TradingCards.updateDeckWhenChange).toHaveBeenCalledWith(document, options, "user-1");
         });
 
         it("preUpdateItem/preCreateItem/preDeleteItem délèguent à TradingCards.checkIfCanUpdateClasses(document, options)", () => {

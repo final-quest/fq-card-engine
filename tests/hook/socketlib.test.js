@@ -1,7 +1,7 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
 import {socket} from "../../src/hook/integration/socketlib.hook.js";
 
-// Les 17 handlers enregistrés côté MJ par socket-lib.js au hook "socketlib.ready".
+// Les 18 handlers enregistrés côté MJ par socket-lib.js au hook "socketlib.ready".
 // Cette liste sert aussi de verrou pour T-04-03 (surface exposée sans auth) :
 // tout ajout/retrait de handler doit être reflété ici consciemment.
 const HANDLER_NAMES = [
@@ -22,6 +22,9 @@ const HANDLER_NAMES = [
     // Pose des murs et du dessin d'un ouvrage de carte : n'écrit que des
     // murs et un dessin marqués du module, jamais d'acteur ni de carte.
     "createZoneWalls",
+    // N'écrit rien : rejoue chez chaque client le signal de fin de
+    // reconstruction des decks.
+    "deckRebuilt",
     // Purement visuel : fait battre l'opacité d'un token dans le canvas de chaque
     // client pour signaler des dégâts, sans jamais écrire sur son document.
     "blinkToken",
@@ -38,7 +41,7 @@ describe("socket-lib", () => {
         globalThis.FqCardEngineModule = undefined;
     });
 
-    it("enregistre les 17 handlers socket au hook socketlib.ready", () => {
+    it("enregistre les 18 handlers socket au hook socketlib.ready", () => {
         const registeredSocket = {register: vi.fn()};
         globalThis.socketlib = {registerModule: vi.fn(() => registeredSocket)};
         globalThis.FqCardEngineModule = {moduleName: "fq-card-engine"};

@@ -1,6 +1,9 @@
 
 import Damage from "../../domain/engine/roll/damage.js";
-import TradingCards from "../../domain/trading/trading-cards.js";
+import TradingCards, {
+    registerDeckRebuildRunner,
+    registerDeckRebuiltBroadcaster
+} from "../../domain/trading/trading-cards.js";
 import Minion from "../../domain/engine/shared/minion.js";
 import ObjectUtils from "../../core/utils/object.utils.js";
 import TokenHud from "../../domain/interface/token-hud.js";
@@ -37,6 +40,9 @@ Hooks.once("socketlib.ready", () => {
     socket.register("deckShuffledAlert", showDeckShuffledAlert);
     socket.register("passCards", TradingCards.passCards);
     socket.register("createZoneWalls", ZoneWall.createZoneWalls);
+    // N'écrit rien : rejoue chez chaque client le signal de fin de
+    // reconstruction des decks, que seul le client reconstructeur connaît.
+    socket.register("deckRebuilt", userId => Hooks.callAll("fq-card-engine.deckRebuilt", userId));
     // Le clignotement de dégâts se joue dans le canvas de CHAQUE client : il ne
     // passe pas par le document du token, qui en persisterait l'opacité basse.
     socket.register("blinkToken", Fx.blinkToken);
@@ -48,6 +54,15 @@ Hooks.once("socketlib.ready", () => {
         // dégâts sur son animation, les autres ne font que regarder.
         ResultWindow.present(report);
     });
+    // La reconstruction des decks crée et détruit des documents `Cards` du
+    // monde : elle est menée par le MJ, et par lui seul, pour qu'un joueur sans
+    // droit de création n'échoue pas à mi-chemin et que deux clients ne se
+    // disputent pas la suppression du grimoire.
+    registerDeckRebuildRunner(userId => socket.executeAsGM("updateDeckForUser", userId));
+    // Le signal de fin repart vers TOUS les clients, le reconstructeur compris :
+    // le grimoire du déclencheur de l'advancement s'ouvre dessus et les barres
+    // de main s'y rafraîchissent, chacun chez lui.
+    registerDeckRebuiltBroadcaster(userId => socket.executeForEveryone("deckRebuilt", userId));
     registerResultBroadcaster(report => {
         socket.executeForOthers("showResultWindow",
             {...report, speed: ResultWindow.speed, pauseSpeed: ResultWindow.pauseSpeed});
