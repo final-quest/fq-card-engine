@@ -1002,3 +1002,87 @@ describe("CardCondition — dé d'arme du sbire", () => {
         expect(CardCondition.minionWeaponDamageDice("beast")).toEqual({number: 0, faces: 0});
     });
 });
+
+describe("CardCondition — cible joueur avec une main", () => {
+
+    let savedUsers;
+    let savedCards;
+
+    /** Construit un jeu de cartes possédé par un utilisateur, du type FQ demandé. */
+    function stack({owner, type}) {
+        return {ownership: {[owner]: 3}, system: {fq: {type, owner}}};
+    }
+
+    /** Installe les utilisateurs du monde et leurs jeux de cartes. */
+    function mountUsers({users = [], stacks = []} = {}) {
+        game.users = {find: predicate => users.find(predicate)};
+        game.cards = stacks;
+    }
+
+    beforeEach(() => {
+        savedUsers = game.users;
+        savedCards = game.cards;
+    });
+
+    afterEach(() => {
+        game.users = savedUsers;
+        game.cards = savedCards;
+    });
+
+    it("vrai quand la cible est le personnage d'un joueur qui a une main", () => {
+        mountUsers({
+            users: [{id: "u1", isGM: false, character: {id: "ally"}}],
+            stacks: [stack({owner: "u1", type: "HAND"})]
+        });
+        mountScene({targets: [makeToken({id: "tokAlly", actorId: "ally"})], logs: []});
+
+        expect(CardCondition.targetsArePlayersWithHand()).toBe(true);
+    });
+
+    it("faux sans cible, ou pour une cible qui n'est le personnage d'aucun joueur", () => {
+        mountUsers({
+            users: [{id: "u1", isGM: false, character: {id: "ally"}}],
+            stacks: [stack({owner: "u1", type: "HAND"})]
+        });
+
+        mountScene({targets: [], logs: []});
+        expect(CardCondition.targetsArePlayersWithHand()).toBe(false);
+
+        mountScene({targets: [makeToken({id: "tokFoe", actorId: "foe"})], logs: []});
+        expect(CardCondition.targetsArePlayersWithHand()).toBe(false);
+    });
+
+    it("faux pour le personnage du MJ, ou pour un joueur sans main", () => {
+        const target = makeToken({id: "tokAlly", actorId: "ally"});
+
+        mountUsers({
+            users: [{id: "gm", isGM: true, character: {id: "ally"}}],
+            stacks: [stack({owner: "gm", type: "HAND"})]
+        });
+        mountScene({targets: [target], logs: []});
+        expect(CardCondition.targetsArePlayersWithHand()).toBe(false);
+
+        mountUsers({
+            users: [{id: "u1", isGM: false, character: {id: "ally"}}],
+            stacks: [stack({owner: "u1", type: "DECK"})]
+        });
+        mountScene({targets: [target], logs: []});
+        expect(CardCondition.targetsArePlayersWithHand()).toBe(false);
+    });
+
+    it("faux dès qu'une seule des cibles n'a pas de main", () => {
+        mountUsers({
+            users: [
+                {id: "u1", isGM: false, character: {id: "ally"}},
+                {id: "u2", isGM: false, character: {id: "other"}}
+            ],
+            stacks: [stack({owner: "u1", type: "HAND"})]
+        });
+        mountScene({
+            targets: [makeToken({id: "tokAlly", actorId: "ally"}), makeToken({id: "tokOther", actorId: "other"})],
+            logs: []
+        });
+
+        expect(CardCondition.targetsArePlayersWithHand()).toBe(false);
+    });
+});

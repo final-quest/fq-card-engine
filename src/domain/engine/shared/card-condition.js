@@ -1,7 +1,7 @@
 import Constants from "../../constants.js";
 import Geometry from "./geometry.js";
 import TargetingPredicates from "./targeting-predicates.js";
-import TradingCards from "../../trading/trading-cards.js";
+import TradingCards, {HAND_TYPE} from "../../trading/trading-cards.js";
 import WeaponDamage, {WEAPON_TOKENS} from "../roll/weapon-damage.js";
 
 /**
@@ -1098,5 +1098,20 @@ export default class CardCondition {
      */
     static handHasOtherCards(card, n = 1) {
         return ((card?.parent?.cards?.size ?? 0) - 1) >= n;
+    }
+
+    /**
+     * Indique si chaque cible sélectionnée est le personnage d'un joueur (MJ
+     * exclu) disposant d'une main — la garde des cartes qui confient une carte
+     * à un allié : sans main d'arrivée, il n'y a nulle part où la poser.
+     *
+     * @returns {boolean} True s'il y a au moins une cible et que toutes sont
+     *                    jouées par un joueur ayant une main.
+     */
+    static targetsArePlayersWithHand() {
+        return CardCondition.#everyTarget(target => {
+            const owner = game.users?.find(user => !user.isGM && user.character?.id === target?.actor?.id);
+            return !!owner && !!TradingCards.getFirstDeck(owner.id, HAND_TYPE, false);
+        });
     }
 }
