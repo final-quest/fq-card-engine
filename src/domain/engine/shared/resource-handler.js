@@ -116,15 +116,11 @@ export default class ResourceHandler {
      * champ du contenu de carte, chemin de mise à jour, réserve courante et
      * plafond de l'acteur. Un descripteur sans `max` décrit une réserve sans
      * plafond (l'action, seule à pouvoir dépasser son maximum). L'ordre de la
-     * table EST l'ordre des mises à jour appliquées à l'acteur.
+     * table EST l'ordre des mises à jour appliquées à l'acteur. Les points de vie
+     * n'y figurent pas : ils ont leur propre descripteur, appliqué plus tard
+     * (cf. {@link ResourceHandler.applyHpModification}).
      */
     static #POOLS = Object.freeze([
-        {
-            field: "hp",
-            path: "system.attributes.hp.value",
-            current: actor => actor.system?.attributes.hp.value,
-            max: actor => actor.system?.attributes.hp.max
-        },
         {
             field: "action",
             path: "system.fq.action.value",
@@ -145,13 +141,78 @@ export default class ResourceHandler {
     ]);
 
     /**
-     * Applique la consommation (ou le gain) de ressources sur l'acteur. Les
+     * Descripteur de la réserve de points de vie, tenue À PART des autres : elle
+     * ne s'applique pas au même moment (cf. {@link ResourceHandler.applyHpModification})
+     * et son plafond est le maximum EFFECTIF, `tempmax` compris — le même que
+     * celui des soins (cf. `Damage.applyActorHpModification`).
+     */
+    static #HP_POOL = Object.freeze({
+        field: "hp",
+        path: "system.attributes.hp.value",
+        current: actor => actor.system?.attributes.hp.value,
+        max: actor => actor.system?.attributes.hp.max + actor.system?.attributes.hp.tempmax
+    });
+
+    /**
+     * Applique une réserve décrite par son descripteur : rien à faire sans
+     * montant, et le total est borné au plafond du descripteur (un descripteur
+     * sans `max` décrit une réserve sans plafond).
+     *
+     * Le montant est NUMÉRISÉ avant d'être ajouté : un script de carte peut
+     * l'avoir réécrit sous sa forme de schéma, c'est-à-dire en texte (« 17 »),
+     * et l'addition d'une chaîne concaténerait au lieu d'ajouter.
+     *
+     * @param {object} pool      - Le descripteur de réserve (field, path, current, max).
+     * @param {object} resources - Les ressources à appliquer.
+     * @param {object} actor     - L'acteur sur lequel appliquer la modification.
+     *
+     * @returns {void}
+     */
+    static #applyPool({field, path, current, max}, resources, actor) {
+        if (!resources?.[field]) {
+            return;
+        }
+        const amount = Number(resources[field]);
+        if (!Number.isFinite(amount)) {
+            return;
+        }
+        const total = current(actor) + amount;
+        // Seule l'action n'a pas de plafond : elle peut monter au-dessus de son max.
+        const cap = max?.(actor);
+        actor.update({[path]: total > cap ? cap : total});
+    }
+
+    /**
+     * Applique le coût ou le gain en points de vie, plafonné au maximum EFFECTIF
+     * (maximum + `tempmax`). Tenue hors de {@link ResourceHandler.consumeResources}
+     * parce qu'elle n'a pas lieu au même moment : les coûts se paient à
+     * l'engagement de la carte, mais les points de vie attendent que les effets
+     * du choix soient posés. Un bouclier y relève d'abord le plafond
+     * (`hp.tempmax`) ; appliqué avant lui, le gain était écrêté au maximum nu
+     * et le bouclier naissait vide — donc sans un seul point à absorber.
+     *
+     * @param {object} resources      - Les ressources du choix (seul `hp` est lu).
+     * @param {number} [resources.hp] - Le coût (négatif) ou le gain (positif) en points de vie.
+     * @param {object} actor          - L'acteur sur lequel appliquer la modification.
+     *
+     * @returns {void}
+     */
+    static applyHpModification(resources, actor) {
+        if (!actor) {
+            return;
+        }
+        ResourceHandler.#applyPool(ResourceHandler.#HP_POOL, resources, actor);
+    }
+
+    /**
+     * Applique la consommation (ou le gain) de ressources sur l'acteur, hormis
+     * les points de vie (cf. {@link ResourceHandler.applyHpModification}). Les
      * ressources sont plafonnées à leur maximum (sauf l'action qui peut le
      * dépasser), et le score de squelettes sacrifiés est déduit de ce que la
      * carte en a dépensé. Le coût en défausse (`drop`) ne passe pas par ici :
      * il se paie en cartes, au moment du jeu (cf. `DiscardCost.pay`).
      *
-     * @param {object} resources - Les ressources à appliquer (hp, action, mana, zeal, xvalue, yvalue).
+     * @param {object} resources - Les ressources à appliquer (action, mana, zeal, xvalue, yvalue).
      * @param {object} actor     - L'acteur sur lequel appliquer les modifications.
      *
      * @returns {void}
@@ -162,14 +223,8 @@ export default class ResourceHandler {
             return;
         }
 
-        for (const {field, path, current, max} of ResourceHandler.#POOLS) {
-            if (!resources?.[field]) {
-                continue;
-            }
-            const total = current(actor) + resources[field];
-            // Seule l'action n'a pas de plafond : elle peut monter au-dessus de son max.
-            const cap = max?.(actor);
-            actor.update({[path]: total > cap ? cap : total});
+        for (const pool of ResourceHandler.#POOLS) {
+            ResourceHandler.#applyPool(pool, resources, actor);
         }
         if (resources?.xvalue === SACRIFICE_PATH || resources?.yvalue === SACRIFICE_PATH) {
             // Le score de sacrifice est DÉDUIT de ce que la carte a réellement
