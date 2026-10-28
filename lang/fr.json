@@ -593,6 +593,7 @@
   "FQCARDENGINE.MacroErrorMsgNoTarget": "Aucune cible sélectionnée !",
   "FQCARDENGINE.MacroErrorMsgNoFreeAdjacentCell": "Impossible de trouver une case adjacente !",
   "FQCARDENGINE.MacroErrorMsgNoPushDirection": "Impossible de déterminer la direction de la projection !",
+  "FQCARDENGINE.MacroErrorMsgNoChargingToken": "Aucun jeton sélectionné à faire charger !",
   "FQCARDENGINE.MacroMsgPlayerDecksCreated": "Création des decks/main/défausse pour les joueurs !",
   "FQCARDENGINE.MacroMsgDeckSingleCopy": "Création d'un deck avec un seul exemplaire de chaque carte !",
   "FQCARDENGINE.MacroMsgDeckSeveralCopies": "Création d'un deck avec plusieurs exemplaires de chaque carte !",

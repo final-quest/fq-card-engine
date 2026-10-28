@@ -593,6 +593,7 @@
   "FQCARDENGINE.MacroErrorMsgNoTarget": "No target selected!",
   "FQCARDENGINE.MacroErrorMsgNoFreeAdjacentCell": "Could not find a free adjacent square!",
   "FQCARDENGINE.MacroErrorMsgNoPushDirection": "Could not work out the push direction!",
+  "FQCARDENGINE.MacroErrorMsgNoChargingToken": "No token selected to charge!",
   "FQCARDENGINE.MacroMsgPlayerDecksCreated": "Creating the decks/hand/discard piles for the players!",
   "FQCARDENGINE.MacroMsgDeckSingleCopy": "Creating a deck with a single copy of each card!",
   "FQCARDENGINE.MacroMsgDeckSeveralCopies": "Creating a deck with several copies of each card!",

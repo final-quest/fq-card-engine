@@ -1,0 +1,27 @@
+{
+  "name": "Charge forward",
+  "type": "script",
+  "img": "icons/skills/movement/arrows-up-trio-red.webp",
+  "author": "uUbINdqSmS5ll9IK",
+  "scope": "global",
+  "command": "// Avance le jeton de N cases droit devant lui, le premier mur l'arrêtant, et\n// joue l'animation de charge. Appelée par DAE depuis l'effet d'une aptitude :\n//     macro.execute | \"Charge forward\" 5\n// Les guillemets sont nécessaires : DAE découpe la valeur du changement en\n// jetons, et un nom nu serait tronqué à son premier mot.\n//\n// DAE relance la macro au RETRAIT de l'effet, avec « off » en premier argument :\n// sans cette garde, le jeton chargerait une seconde fois en perdant l'effet.\n// Lancée à la main depuis la barre, la macro n'a pas d'argument et avance le\n// jeton sélectionné de cinq cases.\nif (args?.[0] === \"off\") {\n  return;\n}\n\nconst charger = token ?? canvas.tokens.controlled[0];\nif (!charger) {\n  ui.notifications.warn(game.i18n.localize(\"FQCARDENGINE.MacroErrorMsgNoChargingToken\"));\n  return;\n}\n\nconst steps = Number(args?.[1]) || 5;\nconst gridSize = canvas.grid.size;\n\n// Convention d'orientation de Foundry, celle que le moteur applique lui-même :\n// rotation = atan2(dy, dx) - 90°, donc l'avant du jeton vaut (-sin, cos).\nconst radians = (charger.document.rotation * Math.PI) / 180;\nconst forward = {x: -Math.sin(radians), y: Math.cos(radians)};\n\n// Un point de passage PAR CASE : Foundry coupe le trajet au premier point\n// bloqué par un mur, le jeton s'arrête donc sur la dernière case atteignable.\n// Une seule étape de cinq cases, elle, serait annulée d'un bloc.\nconst waypoints = Array.from({length: steps}, (_, step) => ({\n  x: Math.round((charger.document.x + (forward.x * gridSize * (step + 1))) / gridSize) * gridSize,\n  y: Math.round((charger.document.y + (forward.y * gridSize * (step + 1))) / gridSize) * gridSize,\n  snapped: true\n}));\n\nawait new Sequence()\n  .effect()\n    .file(\"jb2a.smoke.puff.side.grey\")\n    .atLocation({x: charger.center.x, y: charger.center.y})\n    .scaleToObject(2)\n  .play();\n\nawait charger.document.move(waypoints, {autoRotate: false});\n\nnew Sequence()\n  .effect()\n    .file(\"jb2a.impact.ground_crack.01.orange\")\n    .atLocation(charger)\n    .scaleToObject(1.5)\n  .play();\n",
+  "folder": null,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.369",
+    "systemId": "dnd5e",
+    "systemVersion": "6.0.6",
+    "createdTime": 1793577600000,
+    "modifiedTime": 1793577600000,
+    "lastModifiedBy": "fqcardengine0000",
+    "exportSource": null,
+    "compendiumSource": null,
+    "duplicateSource": null
+  },
+  "_id": "fqChargeForward1",
+  "sort": 0,
+  "_key": "!macros!fqChargeForward1"
+}
